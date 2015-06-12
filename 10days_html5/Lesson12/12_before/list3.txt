@@ -1,0 +1,4 @@
+		<div id="playList">
+			<img src="images/waterfall1.jpg" data-video-url="movie/sample1" alt="滝1">
+			<img src="images/waterfall2.jpg" data-video-url="movie/sample2" alt="滝2">
+		</div>

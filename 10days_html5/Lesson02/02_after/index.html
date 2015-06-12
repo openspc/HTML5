@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>(株)HTML5</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css">
+		<script src="js/main.js"></script>
+	</head>
+	<body>
+		<header>
+			<div><img src="images/logo.png" width="320" height="32" alt="ロゴ"></div>
+		</header>
+		<nav>
+			<ul>
+				<li><a href="info.html">会社概要</a></li>
+				<li><a href="product.html">商品案内</a></li>
+				<li><a href="order.html">ご注文</a></li>
+				<li><a href="recruit.html">採用情報</a></li>
+				<li><a href="news.html">お知らせ</a></li>
+				<li><a href="contact.html">お問い合わせ</a></li>
+			</ul>
+		</nav>
+		<article>
+			<h1>電力事情について</h1>
+			<p>
+				現在、電力供給に不安があるため、各事業部は国内の
+				データセンターだけでなく海外のデータセンターへの
+				移行も視野に入れる必要がでてきました。
+			</p>
+			<p>
+				今後はリスク分散について早急に対処しなければいけません。
+			</p>
+		</article>
+		<section id="main">
+			<h1>新商品に関するお知らせ</h1>
+			<p>先月発売いたしました<b>toHTML5.app</b>は予想以上の売り上げを記録しました。</p>
+			<p>どうもありがとうございます。</p>
+			<p><b>toHTML5.app</b>の追加プラグインとして<ruby>斑鳩<rp>(</rp><rt>いかるが</rt><rp>)</rp></ruby>が
+				<time datetime="2015-02-15">明日</time>発売になります。</p>
+			<p>
+				<strong>注意：Windows XPおよびIE8以前のIEは<strong>動作対象外</strong>になります。</strong>
+			</p>
+			<h2>オーダーフォーム</h2>
+			<form method="post" action="order.cgi">
+				<p>
+					<label>商品名：
+						<input type="text" name="orderitem" list="itemname" autofocus>
+					</label>
+				</p>
+				<datalist id="itemname">
+					<option value="toHTML5.app">toHTML5.app</option>
+					<option value="ikaruga">斑鳩プラグイン</option>
+					<option value="autoHTML5">HTML5自動マークアップ</option>
+					<option value="fromHTML4">HTML4to5コンバーター</option>
+				</datalist>
+				<p>
+					<label>注文数：
+						<input type="number" min="1" max="10" value="1" name="ordernumber">
+					</label>
+				</p>
+				<p>
+					<label>納品日：
+						<input type="date" name="delivery"><br>
+					</label>
+				</p>
+				<p>
+					<label>メール：
+						<input type="email" name="email" size="36" placeholder="メールアドレスを入れてください" required>
+					</label>
+				</p>
+				<p><input type="submit" value="送信"></p>
+			</form>
+		</section>
+		<aside>
+			<div><img src="images/banner.png" width="200" height="200" alt="広告"></div>
+		</aside>
+		<footer>
+			<p><small>2011 &copy; (株)HTML5</small></p>
+			<p>〒100-0014 東京都千代田区永田町1-7-1</p>
+		</footer>
+	</body>
+</html>

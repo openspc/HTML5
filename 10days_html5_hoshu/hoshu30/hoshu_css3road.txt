@@ -1,0 +1,110 @@
+■補講　CSS3のアニメーションで道を走行する
+　前の補習講義でタイルを動かすアニメーションについて学習しました。今回は、その応用として道路を走行するCSS3アニメーションを作成します。
+HTMLの構造は前回のCSS3の補習講義で使用したものと全く同じです。CSSクラス名も全く同じです。ですので、HTMLの構造部分の説明は省略します。ただし、今回は表示範囲が2倍（横だけ）になっていますので、そのサイズ分のCSSの幅調整が必要になります。
+
+
+-------------------------------------------------------------------------------------------------
+■道路の処理
+　まず、道路を走行しているように見せるため縦長の画像を用意します。ここではroad.pngという500×2400ピクセルサイズで作成しました。今回のサンプルでは、かなりパースがかかるようになっているので、道路に文字などを描く場合は縦方向は短く（圧縮）して描いておきます。
+　今回は延々と道路を走行するのでY方向（縦方向）のみリピートして描画します。つまり
+
+background-repeat: repeat-y;
+
+のように指定しておきます。これを指定しないとパースをかけた時に画像が横方向にも繰り返されてしまいます。
+道路を走行する速度は以下の15sの値で指定します。この値を小さくすると高速に走行することになります。
+
+-webkit-animation: 'move' 15s linear 0s infinite normal;
+
+　
+
+#bg {
+	position : absolute;
+	left : 0px;
+	top: 100px;
+	width: 200%;
+	height: 100%;
+	background-image:url(road.png);
+	background-repeat: repeat-y;
+	-webkit-transform: rotateX(30deg);
+	-webkit-animation: 'move' 15s linear 0s infinite normal;
+}
+
+
+どのくらいパースをかけるかは以下の値で指定できます。値が小さいとパースがきつくなり、より視点が地面に近くなります。すると、高速に道路を走行する感じを味わうことができます。
+
+-webkit-perspective: 10;
+
+あと、道路の描画起点も描画範囲に合わせて調整しておく必要があります。これはperspective-originプロパティで設定できます。
+
+-webkit-perspective-origin: 320px 250px;
+
+
+
+------------------------------------------------------------------------------------------------
+■HTML (index.html)
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+	<head>
+		<meta charset="utf-8" />
+		<title>3D道路</title>
+		<link rel="stylesheet" href="css/main.css">
+	</head>
+	<body>
+		<div id="mask">
+			<div id="box">
+				<div id="bg"></div>
+			</div>
+		</div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+■CSS (main.css)
+------------------------------------------------------------------------------------------------
+body {
+	width: 320px;
+	height:480px;
+}
+#bg {
+	position : absolute;
+	left : 0px;
+	top: 100px;
+	width: 200%;
+	height: 100%;
+	background-image:url(road.png);
+	background-repeat: repeat-y;
+	-webkit-transform: rotateX(30deg);
+	-webkit-animation: 'move' 15s linear 0s infinite normal;
+}
+#box {
+	position : absolute;
+	left : 0px;
+	top: 0px;
+	width: 640px;
+	height: 480px;
+	-webkit-perspective: 10;
+	-webkit-perspective-origin: 320px 250px;
+}
+@-webkit-keyframes 'move' {
+	0% { background-position:0px 0px; }
+	100% { background-position:0px 2400px; }
+}
+#mask {
+	position : absolute;
+	left : 0px;
+	top: 0px;
+	width: 640px;
+	height: 480px;
+	clip: rect(0px 640px 480px 0px);
+	background: -webkit-gradient(linear, center top, center bottom, from(#00f), color-stop(40%, #99f), color-stop(50%, #fff), color-stop(51%, #296d12), to(#296d12));
+}
+------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+

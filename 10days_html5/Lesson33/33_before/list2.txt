@@ -1,0 +1,2 @@
+			<input type="button" id="convert1" value="句読点を変換">
+			<input type="button" id="convert2" value="語尾を変換">

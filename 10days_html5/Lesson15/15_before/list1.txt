@@ -1,0 +1,6 @@
+			タイトル：<input type="text" name="dialyTitle" id="dialyTitle" placeholder="タイトルを入れてください"><br>
+			日　　付：<input type="text" name="dialyDate" id="dialyDate"><br>
+			<textarea rows="5" cols="30" name="dialyContents" id="dialyContents" placeholder="メモしたい内容を入れてください"></textarea>
+			<br>
+			<input type="button" id="saveButton" value="保存する">
+			<input type="button" id="loadButton" value="保存した日記を読み出す">

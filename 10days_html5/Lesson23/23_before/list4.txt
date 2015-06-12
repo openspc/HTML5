@@ -1,0 +1,3 @@
+		<div id="imagelist"></div>
+		<div id="fileinfo"></div>
+		<iframe id="view" width="640" height="400"></iframe>

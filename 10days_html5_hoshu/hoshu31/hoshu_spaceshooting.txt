@@ -1,0 +1,947 @@
+■補講　Canvasを使ったゲーム（背景画像付きシューティングゲーム2）
+　この補習講義では背景画像付きシューティングゲームを作成します。あれ？以前の補習講義でも背景画像付きシューティングゲームを作ったじゃないか、と思われる人もいるでしょう。今回は背景付きでもちょっと違います。以前のものは一枚の背景画像でしたが、今回は背景が2枚あります。1枚は宇宙空間で、もう1枚が浮遊するブロック（地上物）です。浮遊するブロックも背景画像とみなすことができるので、2枚の背景画像をスクロールさせることになります。
+　背景以外は前回のゲームのプログラムをそのまま流用します。このため、この補習講義では新たに追加した部分を主に解説します。
+　なお、背景画像部分はSfaari, iPhone/iPad, Google Chromeのみスクロールします。FirefoxやOpera, IEでは背景画像はスクロールしませんが、ゲームとして遊ぶことはできます。どうしても背景をスクロールさせたい場合にはJavaScriptで処理する必要があります。
+
+
+------------------------------------------------------------------------------------------------
+■背景画像とデータの準備
+　まず、Canvas要素に表示される画像ついて説明します。本書での説明はCanvas内に図形／画像を描くにはJavaScriptを使うと説明しました。これは、その通りで他の本を見ても同じように解説されているはずです。しかし、Canvasが表示されている領域にはCSSを使って背景画像を表示することができます。Canvasは初期状態では透明であるため、CanvasにCSSで背景画像を指定すると、その背景画像が表示されることになります。
+　このCSSで指定した背景画像をCSS3アニメーションを使って上から下に移動させます。背景画像はエンドレスでスクロールするため、つなぎ目が目立たないように処理しておきます。
+
+canvas {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	background-image: url(BGstar.png);
+	-webkit-animation: 'moveBG' 60s linear 0s infinite normal;
+}
+@-webkit-keyframes 'moveBG' {
+	0% { background-position:0px 0px; }
+	100% { background-position:0px 960px; }
+}
+
+次にステージデータを用意します。ステージデータは一枚の大きな画像ではなく文字列のデータマップとして用意します。これは、ドットイート型のゲームなどでも解説した方法と同じものです。本ゲームでは以下の文字列と表示されるデータが対応しています。
+
+--------------------------------------
+【表】
+--------------------------------------
+0	何もない空間
+1	ただのブロック
+2	ピラミッド型の敵
+3	硬い敵
+4	敵を倒した後の残骸（プログラム内で書き換え）
+--------------------------------------
+
+
+この文字列をstage配列に入れておきます。つまり以下のようになっています。
+
+
+var stage = new Array();
+stage[1]  = [	"1111111111",
+			"1100000011",
+
+画像データは32×32ピクセルのブロックになっていますので、画像データを追加すればよりいろいろな背景を表示することができます。
+
+
+
+------------------------------------------------------------------------------------------------
+■初期化
+　それでは初期化部分を見てみましょう。これまでのゲームと同様に自機の座標や敵、敵弾の座標を入れる配列等を用意します。
+今回のゲームでは新たに背景画像（ブロック）を入れておくためのmapData配列を用意しています。
+　背景画像を表示するのに配列を用意するというのは、どういうことでしょうか？　このゲームでは宇宙空間はCSS3アニメーションを使いスクロール表示しています。これとは別に浮遊物（地上物／ブロック）の背景画像があります。通常であれば背景画像と自機や敵などが描画されるCanvasは別々に用意します。その方が楽だからです。
+　このゲームではCanvasを2枚重ねずに全てのブロックを座標で持ち、さらに毎回Canvasに描画するという方法を使っています。8bitマシンを使っていた人なら、ありえない方法です。というのも処理速度に問題があるからです。しかし、現在は64bitマシンもある時代で、非常に処理が高速化されています。ですので、実際に全てのブロックデータを配列で持ち、さらに毎回Canvasに書き直したとしてもゲームとして遊べるくらいの速度を出すことができます。
+　なお、本プログラムは高速化、最適化は行っていません（説明しやすくするため、という理由が1つ。あと、もう1つが8bit時代のBASICユーザーでも何とか理解してもらうため）。遅いと思ったら高速化に挑戦してみてください。高速化するにあたっては各ブラウザに用意されているデバッガを利用すると便利です。デバッガにはプロファイリング機能があり、これを使うことで、どの程度処理時間がかかっているかを把握できるからです。ただし、高速化は特定のブラウザでは有効であっても他のブラウザでは、ほとんど効果がないこともあります。
+
+
+var game = {
+	stage : 1,	// ステージ番号
+	fighterX : 130,	// 自車のマップX座標からのオフセット
+	fighterY : 420,	// 自車のマップY座標からのオフセット
+	mouseX : 0,	// マウスのX座標
+	mouseY : 0,	// マウスのY座標
+	score : 0,	// ゲームのスコア
+	charSize : 32,	// 画像の幅（32×32）
+	beamMax : 3,	// ビームの最大数
+	beamData : [null, null, null],	// ビームの座標などを入れる配列（3連射）
+	ikaCount : 0,	// 敵の出現頻度制御
+	ikaMax : 6,	// 敵の最大出現数
+	ikaData : [null, null, null, null, null, null ]	,// 敵の座標などを入れる配列（最大6）
+	tamaMax : 4,	// 弾の最大出現数
+	tamaData : [null, null, null, null ],// 弾の座標などを入れる配列（最大4）
+	mapData : new Array(),	// マップデータ（ブロックの座標値が入る）
+	mapSize : 32,	// マップブロック画像の幅（32×32）
+	mapCounter : 0,	// マップカウンタ
+	mapSpeed : 2,	// マップがスクロールする速度
+	bakData : [null, null, null, null, null, null ],	// 爆発データを入れる配列
+	bakMax : 6	// 爆発の最大数
+};
+
+今回のゲームでは、背景だけでなくもう１つ追加したものがあります。それは爆発処理です。これまでのゲームでは敵を倒しても消えるだけでした。これでは面白味がありません。そこで、このゲームでは敵や地上物を破壊したら円形で爆風が広がるようにします。この爆風のデータを入れておくためにbakData配列を用意しています。
+
+あと、もう１つ。今回のゲームでは浮遊物（背景）は3ステージ分あります。ステージは明確に切り替わるわけではなく、一定数進むと自動的に次のステージに切り替わります。問題は、いつ切り換えるかです。この切り替えのタイミングを取るためにマップカウンタ（mapCounter）を用意しています。
+このマップカウンタの値により敵の攻撃の頻度や、ステージの切り替え判断を行っています。
+
+
+
+------------------------------------------------------------------------------------------------
+■ページ読み込み後の処理
+　ページが読み込まれた後には、これまでのゲームと同じようにCanvasのコンテキストの取得とマウスイベントを設定します。
+その後、浮遊物（背景）を設定するためにsetMap()関数を呼び出しています。マップの設定を行った後は、これまで通りタイマーをスタートさせます。呼び出されるメインプログラム（gameProc関数）は、これまでのゲームと同じパターンなので説明は省略します。
+
+
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	context = canvasObj.getContext("2d");
+	window.document.addEventListener("mousemove", moveMyFighter, false);
+	window.document.addEventListener("mousedown", startBeam, false);
+	setMap();	// マップを初期化
+	timerID = setInterval("gameProc()", 50);
+}, true);
+
+
+
+------------------------------------------------------------------------------------------------
+■マップ（浮遊物／ブロック／背景）の初期化
+　マップの初期化部分について説明します。マップデータはstage配列に入っています。ステージごとにマップデータがありstage[1]がステージ1、stage[2]がステージ2、stage[3]がステージ3となっています。
+　stage配列内のデータは以前解説したレーダータイプのゲームと同じ仕組みになっています。1要素が文字列で構成されており、その文字列が横一列のブロックを示しています。このゲームは画面幅が320ピクセルでブロックが32ピクセルなので、配列要素の文字列の数は10文字になります。これが以下の部分になります。明確に10の数値は出てきませんがlineData.lengthの値が文字列の数になりますので、結果的に10になります。
+
+
+for(var i=0; i<stage[game.stage].length; i++){
+	var lineData = stage[game.stage][i];
+	for(var j=0; j<lineData.length; j++){
+
+
+次にブロックの種類を読み出します。
+
+
+var c = lineData.charAt(j);
+
+
+読み出した文字が"0"だったら何も表示しないのでループの先頭に戻って再度文字列を読み出します。
+
+
+if (c == "0"){ continue; }	// ブロックを出さない場合は内側のループの先頭へ
+
+
+文字が"1", "2", "3"の場合はブロックを登録する必要があります。まず、表示する座標値を求めます。これはループ変数とマップに表示するブロックのサイズを乗算すれば求めることができます。
+
+
+var x = j*game.mapSize;
+var y = i*game.mapSize + startY;
+
+
+次に何発で破壊できるかを決めます。ピラミッドは1発ですが、緑色のブロックは5発で破壊されるようにします。この場合、耐久性（強度）を示すプロパティ(power)を用意し、そこに破壊できる値を入れます。
+
+
+var power = 1;
+if (c == "3"){ power = 5; }	// 5発で破壊
+game.mapData.push({ type : c, x:x, y:y, power:power });
+
+
+これでマップデータの登録ができました。setMap()関数全体としては以下のようになります。
+
+
+function setMap(){
+	var startY = -stage[game.stage].length * game.mapSize;
+	game.mapData = new Array();
+	for(var i=0; i<stage[game.stage].length; i++){
+		var lineData = stage[game.stage][i];
+		for(var j=0; j<lineData.length; j++){
+			var c = lineData.charAt(j);
+			if (c == "0"){ continue; }	// ブロックを出さない場合は内側のループの先頭へ
+			var x = j*game.mapSize;
+			var y = i*game.mapSize + startY;
+			var power = 1;
+			if (c == "3"){ power = 5; }	// 5発で破壊
+			game.mapData.push({ type : c, x:x, y:y, power:power });
+		}
+	}
+}
+
+-----------------------------------------------------
+【コラム】なぜ256発で破壊できる？
+-----------------------------------------------------
+ゲームによっては破壊不可能な物体を256発打つと破壊できるというデマ（噂）が立つ事があります。どうして256発なのでしょうか？　それは1バイトが8ビットだからです。通常、マシン語でゲームを作成する場合、耐久度は1バイトで設定します（MPU68000のようなワード単位(2bytes)の制限があるものは別）。
+この耐久度を8bitで示せる最大値の255（もしくは0）に設定してしまうことがあります。すると弾が当たって耐久度が減っていくと0になった時に破壊される事になります。つまり255か256発で破壊できるわけです。
+もし、これは破壊できるかどうかのフラグであれば、このようなことは起こりません。
+
+-----------------------------------------------------
+
+
+
+
+
+------------------------------------------------------------------------------------------------
+■マップの移動
+　マップの移動処理について説明しましょう。マップの移動処理はmoveMap()関数で行っています。マップの移動は登録されているブロックの数だけ繰り返し処理します。ブロックは下に移動するだけなのでY座標に数値を加算するだけです。
+　ただ、全てのブロックを毎回計算すると時間がかかってしまいます。そこで、画面から消えてしまって二度と出て来ることがないブロックに関しては、ブロックの存在そのものを消去しています。これで、処理するブロックが減るため多少高速化できていると思われます（あまり体感速度が変わらないので他がボトルネックになっているようです）。
+
+
+	for(var i=0; i<game.mapData.length; i++){
+		if (game.mapData[i] == null){ continue; }
+		game.mapData[i].y = game.mapData[i].y + game.mapSpeed;	// マップを移動
+		if (game.mapData[i].y > 480){ game.mapData[i] = null; }
+	}
+
+
+今回はマップがどのくらい進んでいるかを示すため、画面にマップカウンタの値を表示しています。それが、以下の部分です。これは勉強用に入れてあるものですから、マップカウンタがこの値になると切り替わるんだと分かれば表示部分は消してもよいでしょう。
+
+
+	game.mapCounter = game.mapCounter + 1;	// マップカウンタ
+	document.getElementById("result").innerHTML = game.mapCounter;
+
+
+マップカウンタが一定値を超えたらカウンタを0にした後、ステージを進めます。今回は最大3ステージしかないので、3ステージを終えたら最初のステージ1に戻るようにしています。ステージが決まったらsetMap()関数を呼び出して再度ブロックの構築を行います。このマップの再構築時に若干時間がかかるため、0.5秒以上停止したような状態になることがあります。
+
+
+	if (game.mapCounter > n ){
+		game.mapCounter = 0;
+		// 次のステージに進む。3面しかないので3面を超えたら1面に戻す
+		game.stage = game.stage + 1;
+		if (game.stage > 3){ game.stage = 1; }
+		setMap();
+
+
+moveMap()関数全体としては以下のようになります。
+
+
+function moveMap(){
+	for(var i=0; i<game.mapData.length; i++){
+		if (game.mapData[i] == null){ continue; }
+		game.mapData[i].y = game.mapData[i].y + game.mapSpeed;	// マップを移動
+		if (game.mapData[i].y > 480){ game.mapData[i] = null; }
+	}
+	game.mapCounter = game.mapCounter + 1;	// マップカウンタ
+	document.getElementById("result").innerHTML = game.mapCounter;
+	var n = stage[game.stage].length * game.mapSize / game.mapSpeed + 480;	// マップカウント値の最大値を求める
+	if (game.mapCounter > n ){
+		game.mapCounter = 0;
+		// 次のステージに進む。3面しかないので3面を超えたら1面に戻す
+		game.stage = game.stage + 1;
+		if (game.stage > 3){ game.stage = 1; }
+		setMap();
+	}
+}
+
+
+------------------------------------------------------------------------------------------------
+■マップの表示
+　次にマップの表示です。表示するマップの画像データはHTMLページ内に表示されていますから、あらかじめ画像オブジェクトを配列に入れておきます。JavaScriptでは配列に直接画像への参照を入れておくことができます。
+
+
+	var block = [ "",
+		document.getElementById("block1"),
+		document.getElementById("block2"),
+		document.getElementById("block3"),
+		document.getElementById("block4")
+	];
+
+
+あとはマップブロックの数だけ繰り返し描画を行います。なお、この関数では故意にコメントアウトしてある部分があります。これは、マウスの動きに合わせて背景のブロックを左右に少し動かすものです。このようにすると、浮遊感を出す事ができます。ただし、drawMap()関数内で移動させたマップは当たり判定がずれてしまうので、当たり判定ではずらした分も考慮するようにしなければいけません。
+
+
+	for(var i=0; i<game.mapData.length; i++){
+		if (game.mapData[i] == null){ continue; }
+		var blockType = game.mapData[i].type;
+		var x = game.mapData[i].x;
+		var y = game.mapData[i].y;
+		// context.drawImage(block[blockType], x+offsetX, y);
+		context.drawImage(block[blockType], x, y);
+
+
+drawMap()関数全体としては以下のようになります。
+
+
+function drawMap(){
+	// 描画するブロックをあらかじめ配列に入れる
+	var block = [ "",
+		document.getElementById("block1"),
+		document.getElementById("block2"),
+		document.getElementById("block3"),
+		document.getElementById("block4")
+	];
+	// var offsetX = (-game.fighterX / 10) + 32;	// 左右に少し動いて浮遊感を出す場合
+	for(var i=0; i<game.mapData.length; i++){
+		if (game.mapData[i] == null){ continue; }
+		var blockType = game.mapData[i].type;
+		var x = game.mapData[i].x;
+		var y = game.mapData[i].y;
+		// context.drawImage(block[blockType], x+offsetX, y);
+		context.drawImage(block[blockType], x, y);
+	}
+}
+
+
+
+
+------------------------------------------------------------------------------------------------
+■ビームと地上物の当たり判定
+　次に当たり判定について説明します。今回のゲームではこれまでとは異なり地上物との当たり判定も必要になります。また、地上物には耐久性があるため、その処理についても説明します。
+　まず、ビームとマップブロックの接触判定を行います。これはビームの数とブロックの総数分チェックします。かなりの数になりますが、今のパソコンのパワーなら全く問題はありません。
+
+　ビームがブロックに当たった場合は、ブロックの耐久度から1を引きます。もし、耐久度が1以上ならループから抜けます。
+　
+game.beamData[i] = null;	// ビームを消す
+game.mapData[j].power = game.mapData[j].power - 1;
+if (game.mapData[j].power > 0){ break; }	// 破壊できなかった場合はループから抜ける
+
+
+スコアを加算した後、ブロックが破壊された事をしめす文字列("4")にします。その後、爆発処理を行うためのstartBak()関数を呼び出します。
+
+
+game.mapData[j].type = "4";	// 破壊されたブロックの番号にする("4"にする)
+startBak(mx, my);	// 爆発パターンを設定
+
+
+ビームとブロックの当たり判定を行う関数全体は以下のようになります。
+
+
+function hitCheck_beam_block(){
+	for(var i=0; i<game.beamMax; i++){	// 3連射
+		if (game.beamData[i] == null){ continue; }	// ビームが存在していない場合はループの先頭へ
+		var bx = game.beamData[i].x;
+		var by = game.beamData[i].y;
+		for(var j=0; j<game.mapData.length; j++){	// マップブロックの数だけ判定する
+			if (game.mapData[j] == null){ continue; }
+			if ((game.mapData[j].type < 2) || (game.mapData[j].type == 4)){ continue; }	// 通常ブロックか破壊済みの場合は判定しない
+			var mx = game.mapData[j].x;	// X座標
+			var my = game.mapData[j].y;	// Y座標
+			if ((bx > mx) && (bx < (mx+game.mapSize)) && (by > my) && (by < (my+game.mapSize))){
+				game.beamData[i] = null;	// ビームを消す
+				game.mapData[j].power = game.mapData[j].power - 1;
+				if (game.mapData[j].power > 0){ break; }	// 破壊できなかった場合はループから抜ける
+				game.score = game.score + game.mapData[j].type*20;	// ブロックの番号に応じて得点を加算
+				game.mapData[j].type = "4";	// 破壊されたブロックの番号にする(4にする)
+				startBak(mx, my);	// 爆発パターンを設定
+				break;	// ループから抜ける
+			}
+		}
+	}
+}
+
+------------------------------------------------------------------------------------------------
+■爆発処理
+　最後に爆発処理について説明します。startBak()関数は指定されたX,Y座標値を元に爆発の設定を行います。爆発用の配列変数の空きを探した後、座標とともに爆発のサイズ（半径）を設定します。
+
+
+function startBak(x, y){
+	for(var i=0; i<game.bakMax; i++){	// 最大6つまで
+		if (game.bakData[i] == null){
+			game.bakData[i] = { x : x+16, y : y+16, size : 5 };	// 中心から爆発するようにする
+			return;
+		}
+	}
+}
+
+
+爆発の設定が終わっただけでは爆発は何も表示されません。爆発の表示と処理を行うのがdrawBak()関数です。ここでは本書の7章でも説明したarc()メソッドを使って円のパスを作成します。パスを作成し終わったらfill()メソッドで塗り潰します。
+次に爆発の処理も行います。爆発のサイズはsizeプロパティに入っています。この値を増やすことで爆発の円が大きくなります。ただし、無制限に大きくするわけではありません。そこで半径が30ピクセルを超えたら爆発を消すことにします。これが以下の部分になります。
+
+
+game.bakData[i].size = game.bakData[i].size + 2;
+if (game.bakData[i].size > 30){ game.bakData[i] = null; }	// 爆発の半径が一定数を超えたら消す
+
+
+drawBak()関数全体としては以下のようになります。
+
+
+function drawBak(){
+	context.fillStyle = "yellow";	// 爆発色を黄色に
+	context.globalAlpha = 0.75;	// 不透明度を75%に
+	for(var i=0; i<game.bakMax; i++){	// 最大6つまで
+		if (game.bakData[i] == null){ continue; }
+		var x = game.bakData[i].x;
+		var y = game.bakData[i].y;
+		var r = game.bakData[i].size;
+		context.beginPath();	// 新規にパスを作成
+		context.arc(x, y, r, 0, Math.PI*2, false);		// 円を描く
+		context.fill();	// 塗り潰す
+		game.bakData[i].size = game.bakData[i].size + 2;
+		if (game.bakData[i].size > 30){ game.bakData[i] = null; }	// 爆発の半径が一定数を超えたら消す
+	}
+	context.globalAlpha = 1;	// 不透明度を100%に戻す
+}
+
+
+これで、縦スクロールシューティングゲーム2の説明は終わりです。いろいろ、改良してみると面白いでしょう。まずは、画像を書き換えるなど手軽なところから、改造してみるとよいでしょう。なお、今回の補習講義では16連射にしたサンプルを入れてあります。2ヶ所書き換えるだけでできます。
+
+
+
+
+------------------------------------------------------------------------------------------------
+■HTML (index.html)
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>背景画像付きシューティングゲーム2</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/map.js"></script>
+		<script src="js/shoot2.js"></script>
+	</head>
+	<body>
+		<canvas width="320" height="480"></canvas>
+		<div>マウスを動かすと戦闘機（自機）操作できます
+			<ul>
+				<li><img src="images/fighter.png" id="figter">操作する戦闘機（自機）
+				<li><img src="images/ika.png" id="ika">敵。これを倒す
+				<li><img src="images/beam.png" id="beam">戦闘機のレーザー。三連射が可能
+				<li><img src="images/tama.png" id="tama">敵（イカ）の弾。当たるとやられる
+				<li><img src="images/1.png" id="block1">ブロック。地上物なので当たってもやられない
+				<li><img src="images/2.png" id="block2">ピラミッド。地上物なので当たってもやられない
+				<li><img src="images/3.png" id="block3">硬い障害物。地上物なので当たってもやられない
+				<li><img src="images/4.png" id="block4">地上物の爆発後。地上物なので当たってもやられない
+			</ul>
+			マップカウンタ：<span id="result">0</span>
+		</div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+■JavaScript(shoot2)
+------------------------------------------------------------------------------------------------
+// 背景画像付きシューティングゲーム2
+// Game用の変数
+var context = null;
+var timerID = null;
+var game = {
+	stage : 1,	// ステージ番号
+	fighterX : 130,	// 自機のマップX座標からのオフセット
+	fighterY : 420,	// 自機のマップY座標からのオフセット
+	mouseX : 0,	// マウスのX座標
+	mouseY : 0,	// マウスのY座標
+	score : 0,	// ゲームのスコア
+	charSize : 32,	// 画像の幅（32×32）
+	beamMax : 3,	// ビームの最大数
+	beamData : [null, null, null],	// ビームの座標などを入れる配列（3連射）
+	ikaCount : 0,	// 敵の出現頻度制御
+	ikaMax : 6,	// 敵の最大出現数
+	ikaData : [null, null, null, null, null, null ]	,// 敵の座標などを入れる配列（最大6）
+	tamaMax : 4,	// 弾の最大出現数
+	tamaData : [null, null, null, null ],// 弾の座標などを入れる配列（最大4）
+	mapData : new Array(),	// マップデータ（ブロックの座標値が入る）
+	mapSize : 32,	// マップブロック画像の幅（32×32）
+	mapCounter : 0,	// マップカウンタ
+	mapSpeed : 2,	// マップがスクロールする速度
+	bakData : [null, null, null, null, null, null ],	// 爆発データを入れる配列
+	bakMax : 6	// 爆発の最大数
+};
+// ページが読み込まれた時の処理
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	context = canvasObj.getContext("2d");
+	window.document.addEventListener("mousemove", moveMyFighter, false);
+	window.document.addEventListener("mousedown", startBeam, false);
+	setMap();	// マップを初期化
+	timerID = setInterval("gameProc()", 50);
+}, true);
+// 移動＆表示処理
+function gameProc(){
+	context.clearRect(0,0,320,480);
+
+	// マップの移動処理
+	moveMap();
+
+	// 自機の移動処理
+	if ((game.mouseX < game.fighterX) && (game.fighterX > 4)){ game.fighterX = game.fighterX - 8; }
+	if ((game.mouseX > game.fighterX) && (game.fighterX < 288)){ game.fighterX = game.fighterX + 8; }
+	if ((game.mouseY < game.fighterY) && (game.fighterY > 160)){ game.fighterY = game.fighterY - 8; }
+	if ((game.mouseY > game.fighterY) && (game.fighterY < 440)){ game.fighterY = game.fighterY + 8; }
+
+	startIka();	// 敵を出現させる
+	moveIka();	// 敵を移動させる
+	moveBeam();	// ビームを移動
+	moveTama();	// 敵弾を移動させる
+
+	drawMap();	// マップを描画する
+	drawTama();	// 敵弾を描画する
+	drawBeam();	// ビームを描画
+	drawIka();	// 敵を描画する
+	drawBak();	// 爆発パターンを描画する
+
+	// 自機の表示
+	var img = document.getElementById("figter");
+	context.drawImage(img, game.fighterX, game.fighterY);
+
+	// スコアの表示
+	context.fillStyle = "red";
+	context.font = "normal bold 14px Tahoma";
+	context.fillText("SCORE "+game.score, 5, 20);
+
+	hitCheck_beam_ika();	// ビームと敵の当たり判定
+	hitCheck_beam_block();	// ビームと地上物の当たり判定
+
+	// 自機と敵、弾の当たり判定
+	if ((hitCheck_fighter_tama() == true) || (hitCheck_fighter_ika() == true)){
+		clearInterval(timerID);	// タイマー解除
+		context.fillStyle = "red";
+		context.font = "normal bold 24px Tahoma";
+		context.fillText("GAME OVER", 100, 220);
+	}
+
+}
+// 自分の移動処理
+function moveMyFighter(evt){
+	game.mouseX = evt.clientX-20;
+	game.mouseY = evt.clientY-20;
+}
+// ビームを発射
+function startBeam(){
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){
+			game.beamData[i] = { x : game.fighterX + 16, y : game.fighterY };
+			return;
+		}
+	}
+}
+// ビームの移動処理
+function moveBeam(){
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){ continue; }
+		game.beamData[i].y = game.beamData[i].y - 16;
+		if (game.beamData[i].y < -20){
+			game.beamData[i] = null;	// 画面外に消えたらnullにする
+		}
+	}
+}
+// ビームを描画
+function drawBeam(){
+	var beam = document.getElementById("beam");
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){ continue; }
+		context.drawImage(beam, game.beamData[i].x, game.beamData[i].y);
+	}
+}
+// 敵を出現させる
+function startIka(){
+	game.ikaCount = game.ikaCount + 1;
+	if (game.ikaCount < 32){ return; }	// 32回に1回の割合で敵を出す
+	game.ikaCount = 0;
+	if (game.mapCounter > 400){ game.ikaCount = 8; }	// 途中から難易度を上げる
+	if (game.mapCounter > 600){ game.ikaCount = 20; }	// 途中から難易度を上げる
+	if (game.mapCounter > 900){ game.ikaCount = 24; }	// 途中から難易度を上げる
+
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){
+			var x = Math.random() * 200 + 60;	// 出現X座標
+			var dy = Math.random()* 8 + 8;	// 移動速度
+			var dx = 0;
+			if (game.fighterX < 100){ dx = -2; }
+			if (game.fighterX > 200){ dx = 2; }
+			game.ikaData[i] = { x : x, y : -30, dx : dx, dy : dy };
+			return;
+		}
+	}
+}
+// 敵の移動処理
+function moveIka(){
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){ continue; }
+		game.ikaData[i].x = game.ikaData[i].x + game.ikaData[i].dx;
+		game.ikaData[i].y = game.ikaData[i].y + game.ikaData[i].dy;
+		var n = Math.floor(Math.random() * 8);
+		if ((n == 0) && (game.mapCounter > 1000)){	// ある程度マップが進んだら弾を撃つ
+			startTama(game.ikaData[i].x+16, game.ikaData[i].y+32);
+		}
+		if (game.ikaData[i].y > 480){ game.ikaData[i] = null; }
+	}
+}
+// 敵の描画処理
+function drawIka(){
+	var ika = document.getElementById("ika");
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){ continue; }
+		context.drawImage(ika, game.ikaData[i].x, game.ikaData[i].y);
+	}
+}
+// 弾を発射
+function startTama(x, y){
+	for(var i=0; i<game.tamaMax; i++){	// 最大4つ
+		if (game.tamaData[i] == null){
+			var dx = 2;	// 縦方向の移動量
+			if (game.fighterX < x){ dx = -2; }
+			var dy = 4;	// 縦方向の移動量
+			if (game.fighterY < y){ dy = -4; }
+			game.tamaData[i] = { x : x , y : y, dx : dx, dy : dy };
+			return;
+		}
+	}
+}
+// 弾の移動処理
+function moveTama(){
+	for(var i=0; i<game.tamaMax; i++){	// 最大4つ
+		if (game.tamaData[i] == null){ continue; }
+		game.tamaData[i].x = game.tamaData[i].x + game.tamaData[i].dx;
+		game.tamaData[i].y = game.tamaData[i].y + game.tamaData[i].dy;
+		if ((game.tamaData[i].y < -20) || (game.tamaData[i].y > 480)){
+			game.tamaData[i] = null;	// 画面外に消えたらnullにする
+		}
+	}
+}
+// 弾を描画
+function drawTama(){
+	var tama = document.getElementById("tama");
+	for(var i=0; i<game.tamaMax; i++){	// 最大4つ
+		if (game.tamaData[i] == null){ continue; }
+		context.drawImage(tama, game.tamaData[i].x, game.tamaData[i].y);
+	}
+}
+// ビームと敵の当たり判定
+function hitCheck_beam_ika(){
+	for(var i=0; i<game.beamMax; i++){	// 3連射
+		if (game.beamData[i] == null){ continue; }	// ビームが存在していない場合はループの先頭へ
+		var bx = game.beamData[i].x;
+		var by = game.beamData[i].y;
+		for(var j=0; j<game.ikaMax; j++){	// 敵は最大6つなので6
+			if (game.ikaData[j] == null){ continue; }
+			var tx = game.ikaData[j].x;	// X座標
+			var ty = game.ikaData[j].y;	// Y座標
+			if ((bx > tx) && (bx < (tx+game.charSize)) && (by > ty) && (by < (ty+game.charSize))){
+				game.beamData[i] = null;	// ビームを消す
+				game.ikaData[j] = null;	// 敵を消す
+				game.score = game.score + 10;	// 敵を倒すと10点
+				startBak(tx, ty);	// 爆発パターンを設定
+				break;	// ループから抜ける
+			}
+		}
+	}
+}
+// 弾と自機の当たり判定（緩く判定）
+function hitCheck_fighter_tama(){
+	var fx = game.fighterX + 8;
+	var fy = game.fighterY + 8;
+	for(var i=0; i<game.tamaMax; i++){	// 弾は最大4つ
+		if (game.tamaData[i] == null){ continue; }	// 弾が存在していない場合はループの先頭へ
+		var tx = game.tamaData[i].x;
+		var ty = game.tamaData[i].y;
+		if ( (fx > (tx+8)) || ((fx+16) < tx) || (fy > (ty+8)) || ((fy+16) < ty) ){ continue; }
+		return true;	// 接触した事を知らせる
+	}
+	return false;	// 当たっていない事を知らせる
+}
+// 敵と自機の当たり判定（緩く判定）
+function hitCheck_fighter_ika(){
+	var fx = game.fighterX + 4;
+	var fy = game.fighterY + 4; 
+	for(var i=0; i<game.ikaMax; i++){	// 弾は最大6つ
+		if (game.ikaData[i] == null){ continue; }	// 弾が存在していない場合はループの先頭へ
+		var tx = game.ikaData[i].x;
+		var ty = game.ikaData[i].y;
+		if ( (fx > (tx+28)) || ((fx+24) < tx) || (fy > (ty+28)) || ((fy+24) < ty) ){ continue; }
+		return true;	// 接触した事を知らせる
+	}
+	return false;	// 当たっていない事を知らせる
+}
+// ------------- マップ処理 ---------------
+// 開始前にステージに出てくるブロックを設定
+function setMap(){
+	var startY = -stage[game.stage].length * game.mapSize;
+	game.mapData = new Array();
+	for(var i=0; i<stage[game.stage].length; i++){
+		var lineData = stage[game.stage][i];
+		for(var j=0; j<lineData.length; j++){
+			var c = lineData.charAt(j);
+			if (c == "0"){ continue; }	// ブロックを出さない場合は内側のループの先頭へ
+			var x = j*game.mapSize;
+			var y = i*game.mapSize + startY;
+			var power = 1;
+			if (c == "3"){ power = 5; }	// 5発で破壊
+			game.mapData.push({ type : c, x:x, y:y, power:power });
+		}
+	}
+}
+// マップを移動
+function moveMap(){
+	for(var i=0; i<game.mapData.length; i++){
+		if (game.mapData[i] == null){ continue; }
+		game.mapData[i].y = game.mapData[i].y + game.mapSpeed;	// マップを移動
+		if (game.mapData[i].y > 480){ game.mapData[i] = null; }
+	}
+	game.mapCounter = game.mapCounter + 1;	// マップカウンタ
+	document.getElementById("result").innerHTML = game.mapCounter;
+	var n = stage[game.stage].length * game.mapSize / game.mapSpeed + 480;	// マップカウント値の最大値を求める
+	if (game.mapCounter > n ){
+		console.log(game.mapCounter);
+		game.mapCounter = 0;
+		// 次のステージに進む。3面しかないので3面を超えたら1面に戻す
+		game.stage = game.stage + 1;
+		if (game.stage > 3){ game.stage = 1; }
+		setMap();
+	}
+}
+// マップを表示
+function drawMap(){
+	// 描画するブロックをあらかじめ配列に入れる
+	var block = [ "",
+		document.getElementById("block1"),
+		document.getElementById("block2"),
+		document.getElementById("block3"),
+		document.getElementById("block4")
+	];
+	// var offsetX = (-game.fighterX / 10) + 32;	// 左右に少し動いて浮遊感を出す場合
+	for(var i=0; i<game.mapData.length; i++){
+		if (game.mapData[i] == null){ continue; }
+		var blockType = game.mapData[i].type;
+		var x = game.mapData[i].x;
+		var y = game.mapData[i].y;
+		// context.drawImage(block[blockType], x+offsetX, y);
+		context.drawImage(block[blockType], x, y);
+	}
+}
+// ビームとマップ上のブロックの当たり判定
+function hitCheck_beam_block(){
+	for(var i=0; i<game.beamMax; i++){	// 3連射
+		if (game.beamData[i] == null){ continue; }	// ビームが存在していない場合はループの先頭へ
+		var bx = game.beamData[i].x;
+		var by = game.beamData[i].y;
+		for(var j=0; j<game.mapData.length; j++){	// マップブロックの数だけ判定する
+			if (game.mapData[j] == null){ continue; }
+			if ((game.mapData[j].type < 2) || (game.mapData[j].type == 4)){ continue; }	// 通常ブロックか破壊済みの場合は判定しない
+			var mx = game.mapData[j].x;	// X座標
+			var my = game.mapData[j].y;	// Y座標
+			if ((bx > mx) && (bx < (mx+game.mapSize)) && (by > my) && (by < (my+game.mapSize))){
+				game.beamData[i] = null;	// ビームを消す
+				game.mapData[j].power = game.mapData[j].power - 1;
+				if (game.mapData[j].power > 0){ break; }	// 破壊できなかった場合はループから抜ける
+				game.score = game.score + game.mapData[j].type*20;	// ブロックの番号に応じて得点を加算
+				game.mapData[j].type = "4";	// 破壊されたブロックの番号にする(4にする)
+				startBak(mx, my);	// 爆発パターンを設定
+				break;	// ループから抜ける
+			}
+		}
+	}
+}
+// 爆発パターンを開始
+function startBak(x, y){
+	for(var i=0; i<game.bakMax; i++){	// 最大6つまで
+		if (game.bakData[i] == null){
+			game.bakData[i] = { x : x+16, y : y+16, size : 5 };	// 中心から爆発するようにする
+			return;
+		}
+	}
+}
+// 爆発パターンを描画＆サイズ処理
+function drawBak(){
+	context.fillStyle = "yellow";	// 爆発色を黄色に
+	context.globalAlpha = 0.75;	// 不透明度を75%に
+	for(var i=0; i<game.bakMax; i++){	// 最大6つまで
+		if (game.bakData[i] == null){ continue; }
+		var x = game.bakData[i].x;
+		var y = game.bakData[i].y;
+		var r = game.bakData[i].size;
+		context.beginPath();	// 新規にパスを作成
+		context.arc(x, y, r, 0, Math.PI*2, false);		// 円を描く
+		context.fill();	// 塗り潰す
+		game.bakData[i].size = game.bakData[i].size + 2;
+		if (game.bakData[i].size > 30){ game.bakData[i] = null; }	// 爆発の半径が一定数を超えたら消す
+	}
+	context.globalAlpha = 1;	// 不透明度を100%に戻す
+}
+------------------------------------------------------------------------------------------------
+■JavaScript(map.js)
+------------------------------------------------------------------------------------------------
+// ステージマップ
+// 0 : 何もない空間
+// 1 : ただのブロック
+// 2 : ピラミッド型の敵
+// 3 : 硬い敵
+// 4 : 敵を倒した後の残骸（プログラム内で書き換え）
+var stage = new Array();
+stage[1]  = [	"1111111111",
+			"1100000011",
+			"2210000133",
+			"2210000133",
+			"2210000133",
+			"2210000133",
+			"1110000111",
+			"1110000111",
+			"1110000111",
+			"1110000111",
+			"1100000011",
+			"1100000011",
+			"1111001111",
+			"1110000111",
+			"0011111100",
+			"0001111000",
+			"0000000000",
+			"0000000000",
+			"0000000000",
+			"1000000001",
+			"1111001111",
+			"0000110000",
+			"0001111000",
+			"0001221000",
+			"0001221000",
+			"0001331000",
+			"0001331000",
+			"0001331000",
+			"0001111000",
+			"0000110000",
+			"0000000000",
+			"0000000000",
+			"0000000000",
+			"0000111111",
+			"0000111111",
+			"1100112111",
+			"1100113111",
+			"0000111211",
+			"0000011311",
+			"0000001111",
+			"0000000111",
+			"1111000011",
+			"1121000011",
+			"1121000011",
+			"1121000011",
+			"1111111111",
+			"1111111111",
+			"0011000011",
+			"0011000011",
+			"0011110011",
+			"0011110000",
+			"0012110000",
+			"0011110000",
+			"0012110000",
+			"0011110000",
+			"0011110000",
+			"0011110000",
+			"0011110000",
+			"0011000000",
+			"0011000000",
+			"0011000000"
+];
+stage[2]  = [	"1111111111",
+			"0000000011",
+			"0000000011",
+			"0000000011",
+			"0000000011",
+			"0000000011",
+			"1111100111",
+			"1111100111",
+			"1111100111",
+			"1111100111",
+			"1111111111",
+			"1122222211",
+			"1111111111",
+			"1122222211",
+			"1111111111",
+			"1122222211",
+			"1111111111",
+			"1122222211",
+			"1111111111",
+			"1000000001",
+			"0000000000",
+			"0000000000",
+			"0000000000",
+			"0000000000",
+			"0001111000",
+			"0021111200",
+			"0021001200",
+			"0021001200",
+			"0001111000",
+			"0000110000",
+			"0000000000",
+			"0000000000",
+			"0001111000",
+			"1111111111",
+			"1111111111",
+			"1111111111",
+			"1111111111",
+			"1111111111",
+			"2222222222",
+			"2222222222",
+			"2222332222",
+			"2222222222",
+			"2222222222",
+			"1111111111",
+			"1111111111",
+			"1111111111",
+			"1111111111",
+			"0000001111",
+			"0000001111",
+			"0000111111",
+			"0000110000",
+			"0000110000",
+			"0000110000",
+			"0000111000",
+			"0000112100",
+			"0000112100",
+			"0000112222",
+			"0000111122",
+			"0000001111",
+			"0000001111",
+			"0000001111"
+];
+stage[3]  = [	"1111111111",
+			"1111331111",
+			"1113333111",
+			"1113333111",
+			"1111111111",
+			"1111111111",
+			"3331111333",
+			"3331111333",
+			"3331111333",
+			"3331111333",
+			"1111111111",
+			"1100330011",
+			"1100330011",
+			"1100330011",
+			"1111111111",
+			"0000110000",
+			"1111111111",
+			"0000110000",
+			"1111111111",
+			"0000110000",
+			"0000110000",
+			"0000000000",
+			"0000000000",
+			"0000000000",
+			"1111111111",
+			"0011111100",
+			"0011331100",
+			"0011331100",
+			"0001221000",
+			"0000110000",
+			"0000000000",
+			"0000000000",
+			"0000101000",
+			"1121212121",
+			"1212121211",
+			"1121212121",
+			"1212121211",
+			"1111111111",
+			"1111111133",
+			"1111111331",
+			"1111133111",
+			"1113311111",
+			"1131111111",
+			"1311111111",
+			"1311111111",
+			"1111111111",
+			"1111111111",
+			"0011000011",
+			"0011000011",
+			"0000000011",
+			"0000111111",
+			"0000110000",
+			"0000110000",
+			"0000110000",
+			"0000110000",
+			"0000110000",
+			"0000110000",
+			"0000111100",
+			"1100001100",
+			"1110001100",
+			"2222222222"
+];
+------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+

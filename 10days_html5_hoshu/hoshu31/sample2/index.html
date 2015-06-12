@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>背景画像付きシューティングゲーム2(16連射版)</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/map.js"></script>
+		<script src="js/shoot2.js"></script>
+	</head>
+	<body>
+		<canvas width="320" height="480"></canvas>
+		<div>マウスを動かすと戦闘機（自機）操作できます
+			<ul>
+				<li><img src="images/fighter.png" id="figter">操作する戦闘機（自機）
+				<li><img src="images/ika.png" id="ika">敵。これを倒す
+				<li><img src="images/beam.png" id="beam">戦闘機のレーザー。三連射が可能
+				<li><img src="images/tama.png" id="tama">敵（イカ）の弾。当たるとやられる
+				<li><img src="images/1.png" id="block1">ブロック。地上物なので当たってもやられない
+				<li><img src="images/2.png" id="block2">ピラミッド。地上物なので当たってもやられない
+				<li><img src="images/3.png" id="block3">硬い障害物。地上物なので当たってもやられない
+				<li><img src="images/4.png" id="block4">地上物の爆発後。地上物なので当たってもやられない
+			</ul>
+			マップカウンタ：<span id="result">0</span>
+		</div>
+	</body>
+</html>

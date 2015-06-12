@@ -1,0 +1,28 @@
+■補講　FlashからHTML5へ
+　iPhoneやiPadではFlashが動作しません。このため、Flashを使わずにHTML5でアニメーション処理などを行わないといけない場合もあります。とは言っても1からHTML5で作り直すのはコストがかかりますし、ブラウザの動作の違いもあります。
+　そのような場合に便利なのがFlashデータをHTML5に変換するツールやサイトです。FlashからHTML5への変換は本家アドビシステムズからも提供されています。
+　また、別の方法としてはアドビシステムズが提供しているAdobe Edgeを使ってアニメーションを作成するというのもあります。
+
+
+●Adobe Edge
+http://labs.adobe.com/technologies/edge/
+
+
+-----------------------------------------------------------------------------
+■FalshからHTML5に変換するツールなど
+
+●Wallaby（アドビシステムズ）：flaファイルから変換
+http://labs.adobe.com/technologies/wallaby/
+
+
+●Google swiffy：swfファイルから変換
+http://swiffy.googlelabs.com/
+
+
+●FlashForward：swfファイルから変換
+http://tech.kayac.com/archive/swf_on_iphone_flashforward.html
+
+
+
+
+

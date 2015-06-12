@@ -1,0 +1,3 @@
+				カラーコード：<input type="text" name="colorCode"
+					pattern="#[a-f0-9]{6}$"
+					placeholder="#で始まる6桁で指定してください" size="36" required><br>

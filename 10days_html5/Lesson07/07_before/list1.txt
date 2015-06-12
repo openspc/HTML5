@@ -1,0 +1,4 @@
+		<form id="resForm">
+
+		</form>
+		<div id="status">---</div>

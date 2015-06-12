@@ -1,0 +1,6 @@
+		<div id="dragItems">
+			<div>項目1</div>
+			<div>項目2</div>
+			<div>項目3<br><img src="images/photo.jpg" alt="花"></div>
+			<div><img src="images/photo.jpg" alt="花"></div>
+		</div>

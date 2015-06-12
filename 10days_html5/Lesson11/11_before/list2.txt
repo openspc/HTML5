@@ -1,0 +1,5 @@
+		<div id="controller">
+			<img src="images/play.png" id="playButton" alt="再生">
+			<img src="images/stop.png" id="stopButton" alt="停止">
+			<img src="images/rewind.png" id="rewindButton" alt="巻き戻し">
+		</div>

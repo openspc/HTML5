@@ -1,0 +1,2 @@
+			　メール：<input type="email" id="mailAddress" name="mailAddress"><br>
+			電話番号：<input type="tel" id="telephone" name="telephone"><br>

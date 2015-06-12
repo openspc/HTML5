@@ -1,0 +1,4 @@
+			<input type="text" id="shopName" placeholder="お店の名前"><br>
+			<textarea cols="20" rows="6" id="shopInfo"
+				placeholder="お店に関するコメントを入れてください"></textarea><br>
+			<input type="button" id="save" value="現在地の位置とお店情報を保存">

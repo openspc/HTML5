@@ -1,0 +1,37 @@
+body {
+	width: 320px;
+	height:480px;
+}
+#bg {
+	position : absolute;
+	left : 0px;
+	top: 100px;
+	width: 200%;
+	height: 100%;
+	background-image:url(road.png);
+	background-repeat: repeat-y;
+	-webkit-transform: rotateX(30deg);
+	-webkit-animation: 'move' 15s linear 0s infinite normal;
+}
+#box {
+	position : absolute;
+	left : 0px;
+	top: 0px;
+	width: 640px;
+	height: 480px;
+	-webkit-perspective: 10;
+	-webkit-perspective-origin: 320px 250px;
+}
+@-webkit-keyframes 'move' {
+	0% { background-position:0px 0px; }
+	100% { background-position:0px 2400px; }
+}
+#mask {
+	position : absolute;
+	left : 0px;
+	top: 0px;
+	width: 640px;
+	height: 480px;
+	clip: rect(0px 640px 480px 0px);
+	background: -webkit-gradient(linear, center top, center bottom, from(#00f), color-stop(40%, #99f), color-stop(50%, #fff), color-stop(51%, #296d12), to(#296d12));
+}

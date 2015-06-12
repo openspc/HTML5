@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>レーダータイプのゲーム</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/data.js"></script>
+		<script src="js/rader.js"></script>
+	</head>
+	<body>
+		<canvas width="320" height="480">Canvasが使えるブラウザでどうぞ</canvas>
+		<canvas width="160" height="240" id="rader">レーダー画面</canvas>
+		<img src="images/car.png" id="car">
+		<div>カーソルキー（←→↑↓）を動かすと操作できます
+			<ul>
+				<li><img src="images/car.png">操作する車
+				<li><img src="images/money.png" id="money">お金。全部拾い集めるとクリア
+				<li><img src="images/block.png" id="block">ブロック。ここは通り抜けることができない
+				<li><img src="images/road.png" id="road">道路
+			</ul>
+		</div>
+	</body>
+</html>

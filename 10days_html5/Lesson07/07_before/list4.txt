@@ -1,0 +1,4 @@
+			予約状況：<progress id="resStatus" min="0" max="100" value="0">0%が予約済み</progress><br>
+			<input type="button" id="resCheck" value="予約チェック"><br>
+			<input type="button" id="validOff" value="標準のバリデートをオフにする"><br>
+			<input type="submit" value="送信">

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>ページ設定</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+	</head>
+	<body>
+		<h1>ページ設定</h1>
+		<form>
+			<fieldset>
+				<legend>カラー指定(1)</legend>
+				赤：<input type="range" name="red"
+						min="0"
+						max="255"
+						step="10"
+				><br>
+				緑：<input type="range" name="green" min="0" max="255" step="20"><br>
+				青：<input type="range" name="blue" min="0" max="255" step="50"><br>
+			</fieldset>
+			<fieldset>
+				<legend>カラー指定(2)</legend>
+				カラーコード：<input type="text" name="colorCode"
+					pattern="#[a-f0-9]{6}$"
+					placeholder="#で始まる6桁で指定してください" size="36" required><br>
+			</fieldset>
+			<fieldset>
+				<legend>カラー名／コード検索</legend>
+				検索：<input type="search" name="keyword" placeholder="カラー名"><br>
+			</fieldset>
+			<fieldset>
+				<legend>背景画像ファイル指定</legend>
+				ファイル：<input type="file" name="filename[]" accept="image/*" multiple><br>
+			</fieldset>
+			<fieldset>
+				<legend>設定を反映させる日時</legend>
+				<input type="datetime-local" name="dateTime" required step="600"><br>
+			</fieldset>
+			<fieldset>
+				<legend>設定回数（5回まで設定変更できます）</legend>
+				<progress max="5" value="2">2回設定しました</progress><br>
+			</fieldset>
+			<input type="submit" value="送信">
+		</form>
+	</body>
+</html>

@@ -1,0 +1,5 @@
+		<audio id="myAudio" controls preload>
+			<source src="audio/sample1.mp3">
+			<source src="audio/sample1.wav">
+			<p>HTML5 Audioに対応したブラウザをご利用ください</p>
+		</audio>

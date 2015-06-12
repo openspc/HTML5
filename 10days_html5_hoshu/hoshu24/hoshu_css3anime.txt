@@ -1,0 +1,127 @@
+■補講　CSS3のアニメーションを使って動くタイルを表現する
+　本書はHTML5とAPIの解説がメインでした。全く解説していない状態なのがCSS3です。そこで、この補習講義ではCSS3のアニメーション機能を使って3D空間で動くタイルを実現してみます。1980年代のゲームをプレイした人なら「スペースハリアー」の地面のタイルといった方が分かりやすいかも知れません。スペースハリアーはセガの体感ゲームで有名なので検索すれば映像など多数でてきます。
+
+●Wiki
+http://ja.wikipedia.org/wiki/スペースハリアー
+
+●映像
+http://www.youtube.com/watch?v=gSpfknmIAuI
+
+
+------------------------------------------------------------------------------------------------
+■HTMLの構造とCSS3の指定
+　サンプルはSafari, Google ChromeおよびiPhone/iPadで動作します。まず、CSS3で3Dタイルを実現するためには以下のHTML構造にする必要があります。一番外側のdiv要素はマスク用（クリッピング用）です。これがないとタイルがはみでてしまい、見栄えがよくありません。
+　2番目のdiv要素は3Dとして表現するためのものです。これは傾斜角度などを指定するためにあります。これがないと3Dのパース表現ができません。
+　一番内側のdiv要素がタイルを表示する部分です。タイルは市松模様で作成し、それを背景画像として縦横並べることで表現しています。
+
+
+<div id="mask">
+	<div id="box">
+		<div id="bg"></div>
+	</div>
+</div>
+
+
+一番内側のdiv要素で画像をタイル状に並べるには以下のようにCSSを設定します。
+
+background-image:url(tile.png);
+
+これは、従来通りの指定なので説明は不要でしょう。
+2番目のdiv要素は以下のCSSプロパティで3Dパース（3D傾斜）と中心座標を指定します。-webkit-perspectiveは値が小さくなると3Dパース（3D傾斜）がきつくなります。
+
+-webkit-perspective: 100;
+-webkit-perspective-origin: 160px 200px;
+
+
+一番外側のdiv要素のCSSはclipを使って指定します。これで、タイルがはみ出て表示されることがなくなります。
+
+
+clip: rect(0px 320px 480px 0px);
+
+
+------------------------------------------------------------------------------------------------
+■CSS3のアニメーション
+　ここまでは単純にタイルが3Dっぽく表示されるだけです。そこでCSS3のアニメーション機能を使ってタイルが動くアニメーションを指定します。とは言っても非常に簡単にできます。まず、タイルを表示しているdiv要素に以下のCSSプロパティを指定します。
+
+	-webkit-animation: 'move' 0.25s linear 0s infinite normal;
+
+次にどのようにアニメーションするかを指定します。タイルが動いているようにするには背景の表示Y座標をずらします。0%の時は0px、100%の時に32px（タイル画像の縦幅）を指定します。
+
+
+@-webkit-keyframes 'move' {
+	0% { background-position:0px 0px; }
+	100% { background-position:0px 32px; }
+}
+
+
+これで完成です。25年前は非常に苦労した事が今では3行で終わりです。そのくらい進歩したとも言えます。
+
+
+
+------------------------------------------------------------------------------------------------
+■HTML (index.html)
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+	<head>
+		<meta charset="utf-8" />
+		<title>3Dタイル</title>
+		<link rel="stylesheet" href="css/main.css">
+	</head>
+	<body>
+		<div id="mask">
+			<div id="box">
+				<div id="bg"></div>
+			</div>
+		</div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+■CSS (main.css)
+------------------------------------------------------------------------------------------------
+body {
+	width: 320px;
+	height:480px;
+}
+#bg {
+	position : absolute;
+	left : -360px;
+	top: 100px;
+	width: 400%;
+	height: 100%;
+	background-image:url(tile.png);
+	-webkit-transform: rotateX(70deg);
+	-webkit-animation: 'move' 0.25s linear 0s infinite normal;
+}
+#box {
+	position : absolute;
+	left : 0px;
+	top: 0px;
+	width: 320px;
+	height: 480px;
+	-webkit-perspective: 100;
+	-webkit-perspective-origin: 160px 200px;
+}
+@-webkit-keyframes 'move' {
+	0% { background-position:0px 0px; }
+	100% { background-position:0px 32px; }
+}
+#mask {
+	position : absolute;
+	left : 0px;
+	top: 0px;
+	width: 320px;
+	height: 480px;
+	clip: rect(0px 320px 480px 0px);
+	background: -webkit-gradient(linear, center top, center bottom, from(#00f), color-stop(40%, #99f), color-stop(50%, #fff), to(#fff));
+}
+------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+

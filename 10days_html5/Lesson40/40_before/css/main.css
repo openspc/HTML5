@@ -1,0 +1,17 @@
+* {
+	margin: 0;
+}
+body {
+	background-color: black;
+}
+#bgMap, #bg {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 128px;
+	height: 128px;
+	z-index: 3;
+}
+#bg {
+	z-index: 2;
+}

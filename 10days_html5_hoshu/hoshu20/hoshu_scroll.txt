@@ -1,0 +1,51 @@
+■補講　Canvasの内容をスクロールさせる
+　本書の9章Web WorkersではCanvasのピクセルデータを読み出して画像加工するプログラムを作成しました。Canvasではピクセル単位の処理ができるのがSVGとは大きく異なります。
+　そこで、この補習講義ではCanvasに描かれた内容を上から下にスクロールさせるプログラムを作成してみます。Canvas内容をスクロールする処理なら10章でも解説はしました。しかし、10章のサンプルはゲームであり処理速度を上げるために工夫をしていました。ここでは、そういう工夫はせずにベタな方法でCanvasの内容をスクロールさせます。
+
+
+------------------------------------------------------------------------------------------------
+■getImageData()とputImageData()を組み合わせる
+　Canvasの内容を上から下にスクロールさせるには画像データをgetImageData()メソッドで読み出して、CanvasにputImageData()メソッドを使って描画します。この時に元の位置よりも下に描画するとCanvas画像が下にスクロールしたように見えます。これを繰り返すだけでスクロールが実現できます。
+　単純なスクロールであれば、これで終わりです。しかし、10章せ説明したような同じ画像が延々とスクロールする（リングスクロール）の場合は、もう一工夫する必要があります。
+　それは、スクロールして消えてしまうCanvasの最下段のピクセルデータをgetImageData()で読み出しておきます。そして、先ほどのスクロール処理が終わったらCanvasの一番上に最下段のピクセルデータを描画します。これで、同じ画像が延々とスクロールすることになります。
+
+　実際のプログラムは以下のようになります。ピクセルを読み出して処理しているため、あまり高速ではありません。また、FirefoxとGoogle Chromeではローカル上では動作しないのでサーバー上にアップロードしてから実行してください。
+　以下のプログラムではスクロール量はscrollMount = 2の部分で変更できます。この2の値を変更すると一度にスクロールする量が変化します。なお、上から下にしかスクロールできないため、scrollMountに負数を指定しても下から上にはスクロールしません。scrollMountが負数の場合は、下から上にスクロールするように改良してみるとよいでしょう。また、上下でなく左右にスクロールするようにしてみるのもよいでしょう。
+
+
+------------------------------------------------------------------------------------------------
+■Canvasの内容をスクロールさせるプログラム
+------------------------------------------------------------------------------------------------
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	var context = canvasObj.getContext("2d");
+	if (!context){ return; }
+	var img = new Image();
+	img.src = "images/photo.jpg";
+	img.onload = function(){
+		context.drawImage(img, 0, 0);
+	}
+}, true);
+// スクロール処理
+setInterval(function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	var context = canvasObj.getContext("2d");
+	var canvasW = canvasObj.width;
+	var canvasH = canvasObj.height;
+	var scrollMount = 2;
+	var imgData = context.getImageData(0, canvasH-scrollMount, canvasW, scrollMount);	// 最下段をGet
+	var imgDataAll = context.getImageData(0, 0, canvasW, canvasH-scrollMount);	// 最下段以外のピクセルをGet
+	context.putImageData(imgDataAll, 0, scrollMount);	// 上から1ピクセルの所に描画
+	context.putImageData(imgData, 0, 0);	// 一番上に描画
+}, 50);
+------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,39 @@
+■補講　HTML5開発に役立つサイト
+　HTML5開発に役立つサイトを載せておきます。
+
+
+●HTML5.jp
+http://html5.jp/
+　HTMl5に関する日本語の情報がまとまっています。Canvasリファレンスや関連ライブラリがあります。
+
+
+●HTML Validator
+http://validator.w3.org/
+　W3CによるHTMLバリデータ（文法チェッカー）です。
+
+
+●HTML5 Demo
+http://html5demos.com/
+　HTML5のデモが見られます。
+
+
+●HTML5 Tracker
+http://html5.org/tools/web-apps-tracker
+　HTML5関連の更新情報がわかります。
+
+
+●The HTML5 test
+http://html5test.com/
+　アクセスしたブラウザでの対応状況などがわかります。
+
+
+●HTML5 Canvasチートシート
+http://blog.nihilogic.dk/2009/02/html5-canvas-cheat-sheet.html
+　Canvasの機能を１枚にまとめたシートがあります。
+
+
+●WHATWG
+http://www.whatwg.org/
+　W3Cの前にここをチェックするのもよいでしょう。
+
+

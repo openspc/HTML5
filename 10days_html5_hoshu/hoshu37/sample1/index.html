@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>iOS5のSafariの新機能【コンパス】</title>
+		<script>
+			window.addEventListener("deviceorientation", function(evt){
+				var hd = evt.webkitCompassHeading;
+				var hdacc = evt.webkitCompassAccuracy;
+				document.getElementById("compassValue").innerHTML = hd;
+				document.getElementById("compassAcc").innerHTML = hdacc;
+				if(hd == -1){
+					var text = "コンパスの干渉。8の字に回してください";
+				}else{
+					var text = "コンパスの値は正常に取得できています";
+				}
+				document.getElementById("errorStatus").innerHTML = text;
+			}, false);
+		</script>
+	</head>
+	<body>
+		<h1>リアルタイムにコンパスの値を表示します</h1>
+		<div>方角：<span id="compassValue">0</span>度</div>
+		<div>誤差：<span id="compassAcc">0</span>度</div>
+		<div id="errorStatus"></div>
+	</body>
+</html>

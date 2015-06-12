@@ -1,0 +1,11 @@
+h1 {
+	font-size:14pt;
+	width: 100%;
+}
+#dropArea {
+	background-color: #ddd;
+	border: 1px solid black;
+	width: 500px;
+	height: 300px;
+	overflow: scroll;
+}

@@ -1,0 +1,2 @@
+			ワーカー数：<input type="text" id="workerNum" value="4" size="6">
+			<input type="button" id="effect" value="エフェクト処理を行う">

@@ -1,0 +1,32 @@
+h1 {
+	font-size:14pt;
+	width: 100%;
+}
+#dragItems div {
+	position: absolute;
+	top: 80px;
+	background-color: orange;
+	border: 1px solid red;
+	width: 120px;
+	height: 120px;
+}
+#dragItems div:nth-child(1) {
+	left: 10px;
+}
+#dragItems div:nth-child(2) {
+	left: 110px;
+}
+#dragItems div:nth-child(3) {
+	left: 210px;
+}
+#dragItems div:nth-child(4) {
+	left: 310px;
+}
+#dropArea {
+	position: absolute;
+	top: 220px;
+	background-color: #ddd;
+	border: 1px solid black;
+	width: 500px;
+	height: 300px;
+}

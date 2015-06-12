@@ -1,0 +1,247 @@
+■補講　Canvasで白黒画像に色を付けるには？
+　第7章ではCanvasを使ったサンプルを作成しましたが、漢字の練習でありお絵かきソフトやフォトレタッチソフトではありませんでした。中にはPainterなどのお絵かきソフトがよかった、Photoshopのようなフォトレタッチソフトがよかった、と思っている人がいるかもしれません。
+　そこで、この補習ではCanvasに表示された白黒写真に色だけを付ける方法について説明します。
+
+【図】fig1.png
+今回使用する白黒写真（あじさい）
+
+
+------------------------------------------------------------------------------------------------
+■白黒写真に着色
+　Photoshopでは白黒写真にブラシなどで簡単に着色することができます。ブラシの描画モードを「カラー」にしてから、好きな色で塗ります。すると図のように写真の輝度はそのままで色だけが着色されていきます。
+
+
+【図】fig2.png
+Photoshopでブラシの描画モードを「カラー」にする
+
+【図】fig3.png
+ブラシで描くと色だけが着色される
+
+
+普通にブラシで描くと下の画像は消えてしまいます。それでは、一体どうすれば、Canvasでこのような白黒写真の着色処理ができるのでしょうか。
+
+
+
+------------------------------------------------------------------------------------------------
+■色相、彩度、輝度
+　白黒写真に色だけを着色するにはRGBカラーからHSLカラーに変換します。HSLは色を「色相、彩度、輝度」の3つに分解します。ここで、色相だけを変更すれば白黒写真に色を着色することができるのです。
+　それでは実際の処理を説明しましょう。まず、context.getImageData()を使ってブラシで描く部分のピクセルデータを読み込みます。この段階ではRGBデータになっています。
+　ここでRGBからHSL、HSLからRGBに変換するためのライブラリを利用します（RGB_HSL.js）。
+　RGBデータをHSLデータに変換します。
+
+
+var pointer = (y * w + x) * 4;
+var red = pixelData[pointer+0];
+var green = pixelData[pointer+1];
+var blue = pixelData[pointer+2];
+var alpha = pixelData[pointer+3];
+var hsl = RGBtoHSL(red, green, blue);
+
+
+変換したらHSLのうちHue（色相）をペンの色に設定してから再度RGBカラーに変換します。
+
+
+var rgb = HSLtoRGB(penColorHue, 0.5, hsl.L);	// ★ここがポイント
+
+
+変換したらピクセルデータに書き戻します。
+
+
+pixelData[pointer+0] = Math.floor(rgb.R*255);
+pixelData[pointer+1] = Math.floor(rgb.G*255);
+pixelData[pointer+2] = Math.floor(rgb.B*255);
+
+
+ただし、この段階ではCanvasには変換した結果は反映されません。そこで以下のようにしてCanvasに書き戻します。
+
+
+var output = context.createImageData(w, h);
+for(var i=0; i<pixelData.length; i++){
+	output.data[i] = pixelData[i];
+}
+context.putImageData(output, px, py);
+
+
+これで白黒写真の着色することができます。実際のプログラムは以下のようになります。
+
+
+
+------------------------------------------------------------------------------------------------
+■白黒画像に色塗り
+------------------------------------------------------------------------------------------------
+// ページの読み込みが完了したら処理をする
+window.addEventListener("load", function(){
+	var ele = document.getElementById("status");
+	// Canvasが使えるか調べる
+	if (!window.HTMLCanvasElement){
+		ele.innerHTML = "Canvasが使用できません";
+		return;
+	}
+	// Canvasの要素
+	var canvasObj = document.getElementById("myCanvas");
+	// 2Dコンテキストの取得
+	var context = canvasObj.getContext("2d");
+	if (!context){
+		alert("2Dコンテキストが取得できません");
+		return;
+	}
+	// Canvasを塗りつぶす
+	context.fillStyle = "black";
+	context.fillRect(0, 0, canvasObj.width, canvasObj.height);
+	// ★画像をCanvasに描画
+	var imgObj = new Image();
+	imgObj.src = "images/flower.png";
+	imgObj.onload = function(){
+		context.drawImage(imgObj, 0, 0);
+	}
+	// ★ペンカラーを入れる変数
+	var penColor = "cyan";
+	var penColorHue = 180;	// Hue(色相)の値
+	// 描画
+	canvasObj.drawFlag = false;
+	canvasObj.addEventListener("mousemove", function(evt){
+		if (!canvasObj.drawFlag){
+			return;
+		}
+		var x = evt.offsetX || evt.layerX;
+		var y = evt.offsetY || evt.layerY;
+		context.strokeStyle = penColor;	// ★変更箇所
+		drawPen(x, y);					// ★変更箇所
+	}, false);
+	canvasObj.addEventListener("mousedown", function(evt){
+		canvasObj.drawFlag = true;
+	}, false);
+	canvasObj.addEventListener("mouseup", function(evt){
+		canvasObj.drawFlag = false;
+	}, false);
+	// ★ペンのカラーを設定
+	document.getElementById("red").addEventListener("click", function(evt){
+		penColor = "red";
+		penColorHue = 0;	// 赤の色相の角度は0度
+	}, false);
+	document.getElementById("green").addEventListener("click", function(evt){
+		penColor = "green";
+		penColorHue = 120;	// 緑の色相の角度は120度
+	}, false);
+	document.getElementById("blue").addEventListener("click", function(evt){
+		penColor = "blue";
+		penColorHue = 240;	// 青の色相の角度は240度
+	}, false);
+	// ★ペンで描画
+	function drawPen(px, py){
+		var w = 20;	// ペンの横幅
+		var h = 20;	// ペンの縦幅
+		var pixelData = context.getImageData(px,py, w, h).data;
+		for(var y=0; y<h; y++){
+			for(var x=0; x<w; x++){
+				var pointer = (y * w + x) * 4;
+				var red = pixelData[pointer+0];
+				var green = pixelData[pointer+1];
+				var blue = pixelData[pointer+2];
+				var alpha = pixelData[pointer+3];
+				var hsl = RGBtoHSL(red, green, blue);
+				var rgb = HSLtoRGB(penColorHue, 0.5, hsl.L);	// ★ここがポイント
+				pixelData[pointer+0] = Math.floor(rgb.R*255);
+				pixelData[pointer+1] = Math.floor(rgb.G*255);
+				pixelData[pointer+2] = Math.floor(rgb.B*255);
+			}
+		}
+		var output = context.createImageData(w, h);
+		for(var i=0; i<pixelData.length; i++){
+			output.data[i] = pixelData[i];
+		}
+		context.putImageData(output, px, py);
+	}
+}, true);
+-------------------------------------------------------------------------------------------------
+■白黒画像に色塗り（HTML）
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>輝度を保ったまま着色する</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/RGB_HSL.js"></script>
+		<script src="js/canvas.js"></script>
+	</head>
+	<body>
+		<h1>輝度を保ったまま着色する</h1>
+		<form>
+			<input type="button" id="red" value="赤">
+			<input type="button" id="green" value="緑">
+			<input type="button" id="blue" value="青">
+		</form>
+		<canvas id="myCanvas" width="640" height="360">
+			Canvasが利用できるブラウザを使用してください。
+		</canvas>
+		<div id="status"></div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+■白黒画像に色塗り（RGB_HSL.js）
+------------------------------------------------------------------------------------------------
+// RGBとHSLの相互変換関数（ワーカー内専用のグローバル関数）
+// RGB to HSL (R:0~255, G:0〜255, B:0〜255, h:0〜360, s:-1〜1, l:0〜1)
+function RGBtoHSL(r, g, b){
+	var h = 0;
+	var s = 0;
+	var l = 0;
+	var cmax, cmin;
+	if ( r >= g  ) cmax = r; else cmax = g;
+	if ( b > cmax) cmax = b;
+	if ( r <= g  ) cmin = r; else cmin = g;
+	if ( b < cmin) cmin = b;
+	l = (cmax + cmin) / 2;
+	var c = cmax - cmin;
+	if ( c != 0 ){
+		if ( l <= 0.5 ) s = c / (cmax + cmin); else s = c / ( 2 - (cmax + cmin));
+		if ( r == cmax){
+			h = ( g - b ) / c;
+		}else{
+			if (g == cmax){
+				h = 2 + ( b - r ) / c;
+			}else{
+				if ( b == cmax ) h = 4 + ( r - g ) / c;
+			}
+		}
+		h = h * 60;
+		if ( h < 0 ) h = h + 360;
+	}
+	return { H:h, S:s, L:l/255 };
+}
+// HSL to RGB (R:0~255, G:0〜255, B:0〜255, h:0〜360, s:-1〜1, l:0〜1)
+function HSLtoRGB(h, s, l){
+	if (s < 0) s = 0;
+	if (s > 1) s = 1;
+	if (l < 0) l = 0;
+	if (l > 1) l = 1;
+	h = h % 360;
+	if (h < 0) h = h + 360;
+	if (l <= 0.5){
+		var cmin = l * ( 1 - s );
+		var cmax = 2 * l - cmin;
+	}else{
+		var cmax = l * ( 1 - s ) + s;
+		var cmin = 2 * l - cmax;
+	}
+	var r = h2v(h+120,cmin,cmax);
+	var g = h2v(h,cmin,cmax);
+	var b = h2v(h-120,cmin,cmax);
+	return { R:r, G:g, B:b };
+	function h2v(hh,min,max){
+		hh = hh % 360;
+		if (hh <  0) hh = hh + 360;
+		if (hh <  60) return min + (max - min) * hh / 60;
+		if (hh >= 60 && hh < 180) return max;
+		if (hh >=180 && hh < 240) return min+(max-min)*(240-hh)/60;
+		return min;
+	}
+}
+-----------------------------------------------------------------------------------------------
+
+
+
+
+
+

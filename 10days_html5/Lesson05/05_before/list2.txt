@@ -1,0 +1,4 @@
+			　予約日：<input type="date" id="resDay" name="resDay" required><br>
+			予約時間：<input type="time" id="resTime" name="resTime" required><br>
+			予約人数：<input type="number" id="resNumber" name="resNumber" min="1" max="20" required>(1-20人)<br>
+			部屋の色：<input type="color" id="roomColor" name="roomColor"><br>

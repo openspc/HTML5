@@ -1,0 +1,9 @@
+		<section id="main">
+			<h1>新商品に関するお知らせ</h1>
+			<p>先月発売いたしました<b>toHTML5.app</b>は予想以上の売り上げを記録しました。</p>
+			<p>どうもありがとうございます。</p>
+			<p><b>toHTML5.app</b>の追加プラグインとして<ruby>斑鳩<rp>(</rp><rt>いかるが</rt><rp>)</rp></ruby>が
+				<time datetime="2015-02-15">明日</time>発売になります。</p>
+			<p>
+				<strong>注意：Windows XPおよびIE8以前のIEは<strong>動作対象外</strong>になります。</strong>
+			</p>

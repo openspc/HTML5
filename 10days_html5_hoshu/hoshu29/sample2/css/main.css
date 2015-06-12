@@ -1,0 +1,11 @@
+canvas {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	background-color: black; 
+}
+div {
+	position: absolute;
+	left: 10px;
+	top: 490px;
+}

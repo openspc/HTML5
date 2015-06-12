@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>ワーカーにCanvasのデータを渡す</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/worker.js"></script>
+	</head>
+	<body>
+		<h1>ワーカーにCanvasのデータを渡す</h1>
+		<canvas id="myCanvas" width="320" height="240"></canvas>
+		<form>
+			赤：<input type="text" id="red" value="255" size="6"><br>
+			緑：<input type="text" id="green" value="255" size="6"><br>
+			青：<input type="text" id="blue" value="255" size="6"><br>
+			<input type="button" id="calc" value="ピクセル数を計算"><br>
+			<input type="button" id="histgram" value="ヒストグラムを表示">
+		</form>
+		<div id="result"></div>
+	</body>
+</html>

@@ -1,0 +1,3 @@
+		<video id="myVideo" src="dummy.ogg">
+			<p>HTML5 Videoに対応したブラウザをご利用ください</p>
+		</video>

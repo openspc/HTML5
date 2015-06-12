@@ -1,0 +1,2 @@
+			<input type="button" id="read" value="選択した画像を読み込み"><br>
+			<input type="button" id="stopButton" value="読み込みを中断">

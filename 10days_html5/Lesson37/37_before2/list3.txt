@@ -1,0 +1,6 @@
+		<div id="imageList">
+			<img src="images/photo1.jpg" width="64" height="64" alt="">
+			<img src="images/photo2.jpg" width="64" height="64" alt="">
+			<img src="images/photo3.jpg" width="64" height="64" alt="">
+			<img src="images/photo4.jpg" width="64" height="64" alt="">
+		</div>

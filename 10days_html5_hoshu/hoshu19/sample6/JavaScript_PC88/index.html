@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>背面がグラフィック画面で手前が文字画面</title>
+		<style>
+			#screen1, #screen2 { position: absolute; top:0px; left:0px; }
+			#screen1 { color: white; font-size: 10px; }
+			#screen2 { background-color: black; }
+		</style>
+	</head>
+	<body>
+		<canvas id="screen2" width="320" height="200"></canvas>
+		<div id="screen1"></div>
+		<script src="basic.js"></script>
+	</body>
+</html>

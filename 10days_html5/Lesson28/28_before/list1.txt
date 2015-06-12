@@ -1,0 +1,3 @@
+		<canvas id="myCanvas" width="640" height="360">
+			Canvasが利用できるブラウザを使用してください。
+		</canvas>

@@ -1,0 +1,7 @@
+			<fieldset>
+				<legend>部屋のカラー指定</legend>
+				赤：<input type="range" id="red" name="red" min="0" max="255" step="1"><br>
+				緑：<input type="range" id="green" name="green" min="0" max="255" step="20"><br>
+				青：<input type="range" id="blue" name="blue" min="0" max="255" step="50"><br>
+				<div id="bgcolor"></div>
+			</fieldset>

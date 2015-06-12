@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>日記帳2</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/storage.js"></script>
+		<script src="js/loadData.js"></script>
+	</head>
+	<body>
+		<h1>日記帳2</h1>
+		<form>
+			タイトル：<input type="text" name="dialyTitle" id="dialyTitle" placeholder="タイトルを入れてください"><br>
+			日　　付：<input type="text" name="dialyDate" id="dialyDate"><br>
+			<textarea rows="5" cols="30" name="dialyContents" id="dialyContents" placeholder="メモしたい内容を入れてください"></textarea>
+			<br>
+			<input type="button" id="saveButton" value="保存する">
+			<input type="button" id="loadButton" value="保存した日記を読み出す">
+		</form>
+		<div id="status"></div>
+		<div id="list">日記リストを読み込んでいます...</div>
+	</body>
+</html>

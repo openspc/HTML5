@@ -1,0 +1,4 @@
+		<form>
+		文字：<input type="text" size="4" id="char" value="翔">
+		<input type="button" id="drawText" value="文字を描画">
+		</form>

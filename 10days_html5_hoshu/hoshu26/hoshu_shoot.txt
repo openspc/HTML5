@@ -1,0 +1,385 @@
+■補講　Canvasを使ったゲーム（侵略イカゲーム）
+　この補習講義ではインベーダータイプのゲームを作成します。インベーダーゲームは1978年に一世を風靡したゲームです。
+
+●スペースインベーダー
+http://ja.wikipedia.org/wiki/スペースインベーダー
+
+インベーダーゲームはWikiにもあるように多数の敵が並んだまま攻撃してきます。このように、一斉に敵がまとまって攻撃してくる種類のゲームをインベーダータイプとして呼ぶことがあります。インベーダーゲームの後に発売されたナムコのギャラクシアンやギャラガなどがインベーダータイプのゲームに該当します。
+
+　今回の補習ではブロック崩しのプログラムを修正しインベーダータイプのゲームを作成します。攻めてくるのは都合によりイカになっています（侵略イカ娘とは関係はありません）。
+　ブロック崩しとインベーダーゲームはゲームの仕組みが同じです。異なるのはインベーダーが移動し攻めてくるという点です。なお、ここで作成するプログラムでは敵は弾を撃ってきません。改良して敵が弾を撃つようにしてみると勉強になるでしょう。
+　作成するプログラムはブロック崩しのものを流用します。以下のようにキャラクタを置き換えればインベーダータイプのゲームになります。
+
+【表】
+パドル　　→　自機（Fighter）
+ボール　　→　ビーム
+ブロック　→　敵（イカ）
+
+　自機が出すビーム（弾）は単発（1発のみ）です。ビームはCanvas上でマウスボタンが押されたら発射されます。
+
+
+
+------------------------------------------------------------------------------------------------
+■初期化
+　まず、初期化部分を見てみましょう。自機やビームの座標値を入れるプロパティを設定しています。なお、ブロック崩しとは異なりマウスがある方向に自機が移動します。このため、一時的にマウスの座標を入れるプロパティとしてtempXを設定しています。
+　敵（イカ）の座標値はikaXY配列に入れます。これは名前は異なりますが、ブロック崩しの時と同じ仕組みです。敵がやられた場合（存在していない場合）はnullが代入されます。
+　ブロック崩しとは異なり敵（イカ）は左右に移動しながら攻めてきます。この敵の移動方向を入れてあるのがikaDXプロパティです。左右どちらかの端までくると、値の符号が反転します。符号が反転すると移動方向が変わることになります。
+　本家のインベーダーゲームは、敵をまとめて移動させていません。そこで、このゲームでも敵を１つずつ動かすことにします。どの敵を移動させればよいかはikaPointerプロパティに入れます。このikaPointerプロパティの数値が移動させる敵の番号になります。この番号がikaXY配列への参照番号となるわけです。
+
+
+var game = {
+	beamX : 0,	// 自機のビームのX座標
+	beamY : 0,	// 自機のビームのY座標
+	beamFlag : false,	// 自機のビームが発射され移動しているかどうかのフラグ
+	fighterX : 310,	// 自機のX座標
+	fighterY : 440,	// 自機のY座標
+	tempX : 0,	// マウスのX座標を一時的に入れる
+	ikaXY : new Array(),	// イカの座標
+	ikaCount : 0,	// イカの総数
+	ikaSize : 32,	// イカの画像の幅（32×32）
+	ikaMargin : 16,	// イカとイカとの間隔
+	ikaDX : 8,		// イカの移動方向
+	ikaPointer : 0	// 移動させるイカの番号（1つずつ増える）
+};
+
+
+------------------------------------------------------------------------------------------------
+■ページ読み込み後の処理
+　ページが読み込まれた後には敵の座標の初期化とマウス移動、マウスボタンの押下で呼び出すイベントを設定します。
+ブロック崩しの時はブロックの初期化と表示を同時に行いましたが、今回は座標の初期化のみ行います。
+
+
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	context = canvasObj.getContext("2d");
+	initIka();	// イカの位置を初期化
+	timerID = setInterval("moveIka()", 25);
+	canvasObj.addEventListener("mousemove", moveFighter, false);
+	canvasObj.addEventListener("mousedown", startBeam, false);	// マウスボタンが押されたらビーム発射
+}, true);
+
+
+------------------------------------------------------------------------------------------------
+■敵の座標の初期化
+　敵の座標値の初期化はinitIka関数で行っています。ここはブロック崩しの時と同じです。異なるのはプロパティ名と敵の描画を行っていないという点です。
+
+
+function initIka(){
+	for(var y=0; y<5; y++){
+		for(var x=0; x<10; x++){
+			var ix = 20 + x*(game.ikaSize+game.ikaMargin) + 10;	// 20は全体のマージン、10はイカとの間隔
+			var iy = 40 + y*(game.ikaSize+game.ikaMargin) + 10;	// 20は全体のマージン、10はイカとの間隔
+			game.ikaXY.push({ x : ix, y : iy});	// 配列にイカの座標を入れる
+			game.ikaCount = game.ikaCount + 1;	// 作ったイカの数をカウントする
+		}
+	}
+}
+
+
+------------------------------------------------------------------------------------------------
+■自機の移動処理
+　自機の移動処理はブロック崩しの時とは異なります。ブロック崩しの時はマウスの座標が、そのままパドルの座標値になっていました。しかし、同じ事をこのゲームで行うと自機がワープしたように移動してしまいます。まあ、そういう移動するタイプのシューティングゲームがあってもよいのですが、ここではスタンダードにマウスポインタがある方向に自機を少しずつ移動させるようにします。
+　そこで、まずCanvas上でマウスが動いた場合、game.tempXプロパティにマウスの座標を入れておきます。
+
+function moveFighter(evt){
+	game.tempX = evt.clientX - 16;	// マウスの座標を入れる。16は自機の画像の半分の値
+}
+
+　次に敵の移動処理と一緒に自機の移動処理を行います。これはマウス座標に向かって自機が移動すればよいので以下の２行でできます。
+
+
+	if (game.tempX < game.fighterX){ game.fighterX = game.fighterX - 4; }
+	if (game.tempX > game.fighterX){ game.fighterX = game.fighterX + 4; }
+
+
+------------------------------------------------------------------------------------------------
+■ビームの発射処理
+　次にビームの発射処理を見てみましょう。ブロック崩しの時はボールが自動的に移動しました。しかし、このゲームではマウスボタンが押されたらビームがでます。そこで、マウスボタンが押された場合にはビームの発射処理を行う必要があります。
+　ビームがすでに発射されている場合は何もしないようにします。
+　ビームが発射されていない場合はgame.beamFlagフラグをtrueにしてビームが発射されていることを示しておきます。発射されたらビームのX, Y座標を設定します。これは自機の座標をもとにして決めます。今回のビームは横が2pxと細いので自機の中央から発射することにしました。
+
+
+function startBeam(evt){
+	if (game.beamFlag == true){ return; }	// すでに発射済みの場合は何もしない
+	game.beamFlag = true;	// 発射した事にする
+	game.beamX = game.fighterX + 16;	// ビームのX座標を設定
+	game.beamY = game.fighterY;	// ビームのY座標を設定
+}
+
+
+
+------------------------------------------------------------------------------------------------
+■ビームの移動処理
+　発射されたビームの移動処理を見てみましょう。ビームの移動処理も自機、敵の移動と一緒に行います。
+まず、ビームが発射されているかどうか調べます。これはgame.beamFlagを調べtrueの場合だけ処理します。trueであればビームが発射されているからです。
+　ビームは上に移動するのでビームのY座標を減らしていきます。ビームが画面から見えなくなったらgame.beamFlagをfalseにして再度ビームが発射できるようにします。
+
+
+	if (game.beamFlag == true){
+		game.beamY = game.beamY - 16;
+		if (game.beamY < -40){ game.beamFlag = false; }
+	}
+
+
+------------------------------------------------------------------------------------------------
+■描画処理
+　敵の移動処理を説明する前に、先に簡単な描画処理を見てみましょう。本書内ではスクリプトを使ってCanvasに画像を描画しました。これとは別にページ上に表示されている画像を使ってCanvasに描画することもできます。あらかじめページに表示されている場合は、画像データの読み込みを待つ必要がないので処理が簡単になります。
+　まず、ビームから描画します。ビームの場合、発射されているかどうかを調べます。発射されている場合はページ内にあるビームの画像を指定します。あとはdrawImage()を使ってビームを描画します。
+
+
+if (game.beamFlag == true){	// ビームが移動している時だけ描画する
+	var beam = document.getElementById("beam");
+	context.drawImage(beam, game.beamX, game.beamY);
+}
+
+
+敵の描画ですが、game.ikaXY配列を調べnullでなければ描画します。nullの場合は、すでに敵がやられており存在しないためです。
+
+
+var img = document.getElementById("ika");
+for(var i=0; i<game.ikaXY.length; i++){
+	if (game.ikaXY[i] == null){ continue; }	// 処理済みのイカの場合は即座にループの先頭へ
+	var ix = game.ikaXY[i].x;
+	var iy = game.ikaXY[i].y;
+	context.drawImage(img, ix, iy, game.ikaSize, game.ikaSize);
+}
+
+最後に自機の描画を行います。自機もページ内にある自機の画像をdrawImage()に指定するとCanvasに描画されます。
+
+
+var fighter = document.getElementById("fighter");
+context.drawImage(fighter, game.fighterX, game.fighterY);
+
+
+------------------------------------------------------------------------------------------------
+■敵の移動処理
+　それでは敵の移動処理を見てみましょう。敵は1回のタイマー呼び出しにつき1つだけ移動します。この時に、どの敵を動かすかを示しているのがgame.ikaPointerです。このプロパティに0〜49までの値が入っています。これがikaXY配列への参照番号になります。つまりikaXY[game.ikaPointer]として、移動させる敵を指し示すことができるわけです。
+　移動させる敵はgame.ikaPointerで示すことができますが、すでにやられて存在していない場合もあります。その場合は、次の敵を移動させなければいけません。これはgame.ikaPointerに1を加算し再度移動処理可能かどうかを調べます（ループの先頭に戻すことになります）。この時、game.ikaPointerの値が49を超えたら0に戻すようにします。この処理がないと一通り敵が移動したら動きが止まってしまいます。
+
+
+if (game.ikaXY[game.ikaPointer] == null){
+	game.ikaPointer = game.ikaPointer + 1;
+	if (game.ikaPointer > 49) { game.ikaPointer = 0; }	// 最大50しかでないので0に戻す
+	continue;	// ループの先頭へ
+}
+
+
+　敵が存在していた場合には移動処理を行います。移動は現在のX座標に移動量であるgame.ikaDXを加算します。
+
+
+game.ikaXY[game.ikaPointer].x = game.ikaXY[game.ikaPointer].x + game.ikaDX;
+
+
+ただし、このままでは画面の外にまで移動してしまいます。画面の端まできたら移動方向を反転させなければいけません。これはスカッシュ／ブロック崩しの時にも説明しましたが-game.ikaDXとすることで符号が反転します。これにより移動方向が逆になります。
+
+
+if ((game.ikaXY[game.ikaPointer].x > 608) || (game.ikaXY[game.ikaPointer].x < 0)){
+	game.ikaDX = -game.ikaDX;	// 端まで来たので方向を反転させて全体を下に移動
+
+
+画面の端まで到達したら敵全体を下に移動させます。これは敵の数だけY座標を増やせばできあがりです。
+
+for(var i=0; i<game.ikaXY.length; i++){
+	if (game.ikaXY[i] == null){ continue; }	// 処理済みのイカの場合は即座にループの先頭へ
+	game.ikaXY[i].y = game.ikaXY[i].y + 16;
+
+
+このゲームでは敵が画面下まで来ると侵略されたと見なされゲームオーバーになります。これはY座標を調べて一定の値（ここでは442）を超えたらゲームオーバーとしています。ゲームオーバー時はタイマーの動作を停止させた後、アラートダイアログを表示します。
+その後、returnで関数から抜けます。このreturnがないと敵の残った数によりますが何度でもゲームオーバーのアラートダイアログが表示されてしまいます。
+
+
+if (game.ikaXY[i].y > 442){	// 侵略されたと思われるY座標を442にする
+	clearInterval(timerID);
+	alert("イカに侵略されました。ゲームオーバー");
+	return;
+}
+
+
+------------------------------------------------------------------------------------------------
+■ビームと敵の接触判定
+　最後にビームと敵の接触判定です。これはブロック崩しでのボールとブロックの接触判定と全く同じです。異なるのは最初にビームが発射されているかどうかを調べている点です。また、ブロック崩しと違いビームは消さなければいけません。ビームを消さないと貫通弾になってしまいます。貫通弾にしたい場合は「game.beamFlag = false;」の行を消して下さい。
+
+
+	if (game.beamFlag == true){	// ビームが発射され移動している場合のみ判定する
+		for(var i=0; i<game.ikaXY.length; i++){
+			if (game.ikaXY[i] == null){ continue; }	// 処理済みのイカの場合は即座にループの先頭へ
+			if (	(game.beamX >= game.ikaXY[i].x) && 
+				(game.beamX <= game.ikaXY[i].x+game.ikaSize) &&
+				(game.beamY >= game.ikaXY[i].y) &&
+				(game.beamY <= game.ikaXY[i].y+game.ikaSize)){
+				game.ikaXY[i] = null;	// nullにすることでイカを倒したことを示す
+				game.beamFlag = false;	// ビームを消す
+				game.ikaCount = game.ikaCount - 1;	// ブロックの数を減らす
+				if (game.ikaCount < 1){	// 全部倒したらゲームクリア
+					clearInterval(timerID);
+					alert("ゲームクリア！地球は救われました");
+					return;
+				}
+			}
+		}
+	}
+
+
+これでインベーダータイプのゲームの完成です。実際のプログラムは以下のようになります。自機がパワーアップするように改造してみるのもよいでしょう。
+
+
+
+------------------------------------------------------------------------------------------------
+■HTML (index.html)
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>侵略イカゲーム</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/ika.js"></script>
+	</head>
+	<body>
+		<h1>侵略イカゲーム</h1>
+		<canvas width="640" height="480">Canvasが使えるブラウザでどうぞ</canvas>
+		<div>Canvas上でマウスを動かしてください</div>
+		<ul>
+			<li><img src="images/ika.png" id="ika">宇宙イカ。これを全て倒すとゲームクリア。下まで侵略されるとゲームオーバー
+			<li><img src="images/fighter.png" id="fighter">自機。マウスで左右に移動
+			<li><img src="images/beam.png" id="beam">自機のビーム。単発。
+		</ul>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+■JavaScript(ika.js)
+------------------------------------------------------------------------------------------------
+// 侵略イカゲーム（スペースシューティングゲーム）
+// Game用の変数
+var context = null;
+var timerID = null;
+var game = {
+	beamX : 0,	// 自機のビームのX座標
+	beamY : 0,	// 自機のビームのY座標
+	beamFlag : false,	// 自機のビームが発射され移動しているかどうかのフラグ
+	fighterX : 310,	// 自機のX座標
+	fighterY : 440,	// 自機のY座標
+	tempX : 0,	// マウスのX座標を一時的に入れる
+	ikaXY : new Array(),	// イカの座標
+	ikaCount : 0,	// イカの総数
+	ikaSize : 32,	// イカの画像の幅（32×32）
+	ikaMargin : 16,	// イカとイカとの間隔
+	ikaDX : 8,		// イカの移動方向
+	ikaPointer : 0	// 移動させるイカの番号（1つずつ増える）
+};
+// ページが読み込まれた時の処理
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	context = canvasObj.getContext("2d");
+	initIka();	// イカの位置を初期化
+	timerID = setInterval("moveIka()", 25);
+	canvasObj.addEventListener("mousemove", moveFighter, false);
+	canvasObj.addEventListener("mousedown", startBeam, false);	// マウスボタンが押されたらビーム発射
+}, true);
+// イカの移動＆表示処理
+function moveIka(){
+	context.clearRect(0,0, 640, 480);	// Canvas全体を消去（別々に消すのが面倒だから）
+
+	// 自機の移動処理
+	if (game.tempX < game.fighterX){ game.fighterX = game.fighterX - 4; }
+	if (game.tempX > game.fighterX){ game.fighterX = game.fighterX + 4; }
+	// ビームの移動処理
+	if (game.beamFlag == true){
+		game.beamY = game.beamY - 16;
+		if (game.beamY < -40){ game.beamFlag = false; }
+	}
+	// イカの移動処理（1つずつ移動させる）
+	while(true){
+		if (game.ikaXY[game.ikaPointer] == null){
+			game.ikaPointer = game.ikaPointer + 1;
+			if (game.ikaPointer > 49) { game.ikaPointer = 0; }	// 最大50しかでないので0に戻す
+			continue;	// ループの先頭へ
+		}
+		game.ikaXY[game.ikaPointer].x = game.ikaXY[game.ikaPointer].x + game.ikaDX;
+		if ((game.ikaXY[game.ikaPointer].x > 608) || (game.ikaXY[game.ikaPointer].x < 0)){
+			game.ikaDX = -game.ikaDX;	// 端まで来たので方向を反転させて全体を下に移動
+			for(var i=0; i<game.ikaXY.length; i++){
+				if (game.ikaXY[i] == null){ continue; }	// 処理済みのイカの場合は即座にループの先頭へ
+				game.ikaXY[i].y = game.ikaXY[i].y + 16;
+				if (game.ikaXY[i].y > 442){	// 侵略されたと思われるY座標を442にする
+					clearInterval(timerID);
+					alert("イカに侵略されました。ゲームオーバー");
+					return;
+				}
+			}
+		}
+		game.ikaPointer = game.ikaPointer + 1;
+		if (game.ikaPointer > 49) { game.ikaPointer = 0; }	// 最大50しかでないので0に戻す
+		break;
+	}
+
+	// イカとビームの接触判定
+	if (game.beamFlag == true){	// ビームが発射され移動している場合のみ判定する
+		for(var i=0; i<game.ikaXY.length; i++){
+			if (game.ikaXY[i] == null){ continue; }	// 処理済みのイカの場合は即座にループの先頭へ
+			if (	(game.beamX >= game.ikaXY[i].x) && 
+				(game.beamX <= game.ikaXY[i].x+game.ikaSize) &&
+				(game.beamY >= game.ikaXY[i].y) &&
+				(game.beamY <= game.ikaXY[i].y+game.ikaSize)){
+				game.ikaXY[i] = null;	// nullにすることでイカを倒したことを示す
+				game.beamFlag = false;	// ビームを消す
+				game.ikaCount = game.ikaCount - 1;	// ブロックの数を減らす
+				if (game.ikaCount < 1){	// 全部倒したらゲームクリア
+					clearInterval(timerID);
+					alert("ゲームクリア！地球は救われました");
+					return;
+				}
+			}
+		}
+	}
+
+	// ビームを描画
+	if (game.beamFlag == true){	// ビームが移動している時だけ描画する
+		var beam = document.getElementById("beam");
+		context.drawImage(beam, game.beamX, game.beamY);
+	}
+	// イカを描画
+	var img = document.getElementById("ika");
+	for(var i=0; i<game.ikaXY.length; i++){
+		if (game.ikaXY[i] == null){ continue; }	// 処理済みのイカの場合は即座にループの先頭へ
+		var ix = game.ikaXY[i].x;
+		var iy = game.ikaXY[i].y;
+		context.drawImage(img, ix, iy, game.ikaSize, game.ikaSize);
+	}
+	// 自機を描画
+	var fighter = document.getElementById("fighter");
+	context.drawImage(fighter, game.fighterX, game.fighterY);
+}
+// 自機の移動処理
+function moveFighter(evt){
+	game.tempX = evt.clientX - 16;	// マウスの座標を入れる。16は自機の画像の半分の値
+}
+// ビームの発射処理
+function startBeam(evt){
+	if (game.beamFlag == true){ return; }	// すでに発射済みの場合は何もしない
+	game.beamFlag = true;	// 発射した事にする
+	game.beamX = game.fighterX + 16;	// ビームのX座標を設定
+	game.beamY = game.fighterY;	// ビームのY座標を設定
+}
+// ゲーム開始時のイカの位置を初期化（10匹×5段）
+function initIka(){
+	for(var y=0; y<5; y++){
+		for(var x=0; x<10; x++){
+			var ix = 20 + x*(game.ikaSize+game.ikaMargin) + 10;	// 20は全体のマージン、10はイカとの間隔
+			var iy = 40 + y*(game.ikaSize+game.ikaMargin) + 10;	// 20は全体のマージン、10はイカとの間隔
+			game.ikaXY.push({ x : ix, y : iy});	// 配列にイカの座標を入れる
+			game.ikaCount = game.ikaCount + 1;	// 作ったイカの数をカウントする
+		}
+	}
+}
+------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+

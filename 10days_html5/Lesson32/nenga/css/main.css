@@ -1,0 +1,16 @@
+#dropArea {
+	position:absolute;
+	top: 0px;
+	left: 0px;
+	border:1px solid black;
+	background-color:#eee;
+	width: 10cm;
+	height:14.5cm;
+}
+.dd {
+	position:absolute;
+	top: 50px;
+	left: 11cm;
+	font-size: 24px;
+	font-weight: bold;
+}

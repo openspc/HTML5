@@ -1,0 +1,6 @@
+		<ul id="books">
+			<li data-book-url="audio/sample1">吾輩は猫である
+			<li data-book-url="audio/sample2">杜子春
+			<li data-book-url="audio/sample3">蜘蛛の糸
+			<li data-book-url="audio/sample4">走れメロス
+		</ul>

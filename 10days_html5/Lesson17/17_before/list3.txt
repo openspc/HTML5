@@ -1,0 +1,2 @@
+			<input type="button" id="get" value="現在地の位置情報を取得"><br>
+			<input type="button" id="stop" value="位置情報の取得を停止">

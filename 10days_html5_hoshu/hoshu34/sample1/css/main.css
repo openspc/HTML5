@@ -1,0 +1,17 @@
+canvas {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	background-color: blue; 
+}
+div {
+	position: absolute;
+	left: 10px;
+	top: 330px;
+}
+#myChar {
+	position: absolute;
+	left: 256px;
+	top: 160px;
+	z-index: 2;
+}

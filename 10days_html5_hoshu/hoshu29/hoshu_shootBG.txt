@@ -1,0 +1,806 @@
+■補講　Canvasを使ったゲーム（背景画像付きシューティングゲーム）
+　この補習講義では背景画像付きシューティングゲームを作成します。現在では背景が表示されるのが当たり前ですので、特に珍しいゲームを作成するわけではありません。
+　ここで作成するゲームは2Dの縦スクロールシューティングゲームです。自機はマウスで上下左右に移動し、マウスボタンを押すとビームを発射します。ビームは三連射になっているので、同時に弾が3つ表示されることになります。
+　敵は1種類ですが、ゲームが進むに従って数が多くなり、途中から弾を撃つようになります。自機（戦闘機）は敵や弾に当たるとやられてしまいゲームオーバーとなります。
+　マップは1種類のみで延々と同じマップがスクロールし表示されます。なお、操作はマウスで行います。マウスがある方向に自機が移動し、マウスボタンを押すとショット（ビームが発射）になります。
+
+
+------------------------------------------------------------------------------------------------
+■画像の準備
+　マップ画像は1枚の縦長のJPEG画像です。横幅は320ピクセルで縦幅は4800ピクセルです。つまり画面に表示される範囲の10倍の長さのJPEG画像です。20年くらい前であれば、このように1枚の画像で用意することは難しく、ドットイート型の補習講義で解説したような文字や数値でマップを構成するのが一般的でした。
+　現在は一枚絵でスクロール処理した方が簡単で高速です。
+
+　マップ画像以外に今回は以下の画像も用意します。以前の補習講義で使用した画像を流用しています。新たに用意したのは敵が発射する弾です。この弾は16×16サイズになっています。
+
+
+beam.png	自機のビーム
+fighter.png	自機（戦闘機。インベーダータイプのゲームから流用））
+ika.png	敵（イカ。インベーダータイプのゲームから流用）
+tama.png	敵が発射する弾
+
+
+
+------------------------------------------------------------------------------------------------
+■初期化
+　それでは初期化部分を見てみましょう。これまでのゲームと同様に自機の座標や敵、敵弾の座標を入れる配列等を用意します。
+mapImageはマップの画像をいれておくためのオブジェクトです。これはページの読み込みが完了した後に画像データを読み込ませます。
+
+
+var mapImage = new Image();	// マップの画像を入れるためのもの
+var game = {
+	fighterX : 130,	// 自車のマップX座標からのオフセット
+	fighterY : 420,	// 自車のマップY座標からのオフセット
+	mouseX : 0,	// マウスのX座標
+	mouseY : 0,	// マウスのY座標
+	score : 0,	// ゲームのスコア
+	charSize : 32,	// 画像の幅（32×32）
+	mapY : -4800+480,	// マップの初期位置(Y座標)
+	beamMax : 3,	// ビームの最大数
+	beamData : [null, null, null],	// ビームの座標などを入れる配列（3連射）
+	ikaCount : 0,	// 敵の出現頻度制御
+	ikaMax : 6,	// 敵の最大出現数
+	ikaData : [null, null, null, null, null, null ]	,// 敵の座標などを入れる配列（最大6）
+	tamaMax : 4,	// 弾の最大出現数
+	tamaData : [null, null, null, null ],// 弾の座標などを入れる配列（最大4）
+};
+
+
+------------------------------------------------------------------------------------------------
+■ページ読み込み後の処理
+　ページが読み込まれた後には、これまでのゲームと同じようにCanvasのコンテキストの取得とマウスイベントを設定します。
+ドットイート型のゲームと同じように敵の座標の初期化とキーダウンイベントを設定します。
+　これまでのゲームと異なるのはマップ画像を読み込んだ後にタイマーを設定している点です。mapImageのsrcプロパティに読み込ませるマップデータのURLを設定します。画像データが読み込まれるとonloadに設定したイベントハンドラが実行されます。ここで、ゲームを動作させるためのタイマーを呼び出します。このようにしないと、マップ画像の読み込みが完了していない場合、ゲームの背景画像が表示されない事になります。
+　今回のゲームではマップ画像は1種類しかありませんが、マップ画像が複数ある場合には最初の段階で読み込ませておくのがよいでしょう。ただし、スマートフォンなどメモリに制限があるデバイスを前提する場合は、マップの切り替え直前に読み込ませた方がよいかもしれません。
+
+
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	context = canvasObj.getContext("2d");
+	window.document.addEventListener("mousemove", moveMyFighter, false);
+	window.document.addEventListener("mousedown", startBeam, false);
+	mapImage.src = "images/map.jpg";
+	mapImage.onload = function(){
+		timerID = setInterval("gameProc()", 50);
+	}
+}, true);
+
+
+
+------------------------------------------------------------------------------------------------
+■ゲームのメイン処理
+　今回は登場するキャラクタの種類が多いためメイン処理を行うgameProc()関数内では各種関数を呼び出すようにしています。gameProc()関数内ではマップの表示、自機の移動とゲームオーバーの処理を行っています。
+　まず、マップの表示処理を見てみましょう。マップを描画している部分は以下のようになっています。drawImage()でマップを描画していますが、これはすでに表示されている自機や敵のキャラクタなどを消去するという機能を担っています。ブロック崩しなどは、ブロックやパドルを消去していました。このゲームではCanvas全体を背景画像で上書きしてしまうため消す必要がないのです。
+
+context.drawImage(mapImage, 0, game.mapY);	// マップを描画
+
+マップを表示したらマップを下に移動（スクロール）させます。これはマップの座標に数値を加算するだけです。このゲームでは2ピクセルずつ下に移動させます。1にすると1ピクセルずつ移動するようになりますので書き換えて試してみるとよいでしょう。
+
+game.mapY = game.mapY + 2;	// マップを移動
+
+マップをこのまま下に移動させていくと、そのうちマップの最後まで到達していまいます（game.mapYの値が0になる）。今回のゲームでは延々と同じマップを移動するので以下のようにしてマップを最後まで表示したら最初の座標値に戻すようにしています。
+
+if (game.mapY > -10) { game.mapY = -4800+480; }
+
+これでマップの移動処理は終わりです。
+次に自機の移動処理を見てみましょう。マウスの座標を調べてマウスがある方向に自機を移動させます。これまでの補習講義を読んでいれば、十分理解できるでしょう。
+
+if ((game.mouseX < game.fighterX) && (game.fighterX > 4)){ game.fighterX = game.fighterX - 8; }
+if ((game.mouseX > game.fighterX) && (game.fighterX < 288)){ game.fighterX = game.fighterX + 8; }
+if ((game.mouseY < game.fighterY) && (game.fighterY > 160)){ game.fighterY = game.fighterY - 8; }
+if ((game.mouseY > game.fighterY) && (game.fighterY < 440)){ game.fighterY = game.fighterY + 8; }
+
+自機の移動処理が終わったら敵を移動させる処理を行う関数を呼び出します。呼び出す順番は以下のようになっています。
+
+startIka();	// 敵を出現させる
+moveIka();	// 敵を移動させる
+moveBeam();	// ビームを移動
+moveTama();	// 敵弾を移動させる
+drawTama();	// 敵弾を描画する
+drawBeam();	// ビームを描画
+drawIka();	// 敵を描画する
+
+この中で敵を描画する、敵弾を描画する処理はほとんど同じです。これまでの補習講義と重なる部分もあります。そこで、ここでは本ゲームにおいて追加された部分のみ解説を行います。
+
+
+
+------------------------------------------------------------------------------------------------
+■ビームを発射
+　本ゲームでは、これまでのゲームと異なり三連射が可能です。三連射が可能ということは画面に最大3つまでのビームを出せるということです。
+　単発であればフラグを用意するだけですが、三連射の場合は配列（game.beamData）を用意しそこにビームの座標値を入れます。もし、ビームが存在していない場合はnullにしておきます。
+　マウスボタンが押されたらビームを発射します。この時、game.beamData配列に空きがあるかどうか調べます。空きがあるか、というのは配列の内容がnullかどうかを調べるということです。nullであればビームを発射できますので、新たにビームの座標値を設定します。ビームの座標値は自機の中央から発射するようにします。ビームの座標を設定したらreturnで関数から抜けます。これを忘れると、3発まとめて同時に発射されてしまうことがあります。
+
+
+function startBeam(){
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){
+			game.beamData[i] = { x : game.fighterX + 16, y : game.fighterY };
+			return;
+		}
+	}
+}
+
+
+
+------------------------------------------------------------------------------------------------
+■敵を出現させる
+　本ゲームではこれまでのゲームとは異なり、マップの移動にあわせて敵の出現頻度や弾を撃つかどうかを決める必要があります。もし、そのような処理がなければいきなり大量に敵が出現し、弾も大量にばらまかれ、あっという間にゲームオーバーになってしまいます。
+　まず、敵をどの程度出現させるかです。ここではカウンタを用意し、最初は32回に1回だけ敵を出すようにします。
+　
+	game.ikaCount = game.ikaCount + 1;
+	if (game.ikaCount < 32){ return; }	// 32回に1回の割合で敵を出す
+	game.ikaCount = 0;
+
+ただ、最初から最後まで同じでは面白くありません。そこで、マップの座標値を元にして難易度を上げていきます。
+
+	if (game.mapY > -1000){ game.ikaCount = 8; }	// 途中から難易度を上げる
+	if (game.mapY > -2400){ game.ikaCount = 16; }	// 途中から難易度を上げる
+	if (game.mapY > -4000){ game.ikaCount = 24; }	// 途中から難易度を上げる
+
+
+ここまでが出現頻度の処理です。次に敵を出す処理を行います。敵を出すかどうかは、game.ikaData配列に空きがあるかどうか調べます。これは自機のビームを発射する時の仕組みと同じでgame.ikaData配列内でnullがあるかどうか調べます。
+nullの場合は、ランダムにX座標値を設定します。後は、移動量などを設定しgame.ikaData配列に入れます。配列に座標値などを入れたらreturnで関数から抜けます。returnで抜けないと敵がまとまって出現してしまいます。
+
+
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){
+			var x = Math.random() * 200 + 60;	// 出現X座標
+			var dy = Math.random()* 8 + 8;	// 移動速度
+			var dx = 0;
+			if (game.fighterX < 100){ dx = -2; }
+			if (game.fighterX > 200){ dx = 2; }
+			game.ikaData[i] = { x : x, y : -30, dx : dx, dy : dy };
+			return;
+		}
+	}
+
+
+
+---------------------------------------------------
+【コラム】ゼビウスのように地上物を出すには
+　本ゲームでは空中の敵しか出てきません。ナムコのゼビウスのように地上物も出すようにするには、どうしたらよいのでしょうか。
+
+●ゼビウス
+http://ja.wikipedia.org/wiki/ゼビウス
+
+地上にある建物の場合は空中の敵のようにランダムに出すわけにはいきません。ほとんどの場合、あらかじめ出現する位置が決まっているためです。
+地上物を出す場合でもマップがどこまで表示されているかを利用します。マップがどのくらい移動したかを示すマップカウンタがあれば、それをベースにして以下のように出現データを用意しておきます。
+
+{ mapCounter : 300, type : "ピラミッド", x : 20 },
+{ mapCounter : 320, type : "浮遊要塞", x : 120 },
+{ mapCounter : 340, type : "戦車", x : 300 },
+
+後は、このようなデータを元にして敵を出していきます。
+
+
+---------------------------------------------------
+
+
+
+------------------------------------------------------------------------------------------------
+■ビームと敵の当たり判定
+　次に当たり判定について説明します。これまでも当たり判定については説明してきました。ただ、これまでは「1 対 多」の判定でした。
+　今回は3つのビームと複数の敵の当たり判定を行わなければいけません。と言ってもあまり難しいわけではありません。forループを使って、総当たりでチェックします。つまり二重ループで繰り返し当たっているかどうかを調べていくわけです。
+　ビームと敵が当たった場合にはスコア（game.scrore）を加算します。本ゲームではハイスコアはありませんが、ハイスコアも表示するようにしてみるのもよいでしょう。10章のレッスン39を参考にしてハイスコアをローカルストレージに保存してみるのも勉強になると思います。
+
+
+function hitCheck_beam_ika(){
+	for(var i=0; i<game.beamMax; i++){	// 3連射
+		if (game.beamData[i] == null){ continue; }	// ビームが存在していない場合はループの先頭へ
+		var bx = game.beamData[i].x;
+		var by = game.beamData[i].y;
+		for(var j=0; j<game.ikaMax; j++){	// 敵は最大6つなので6
+			if (game.ikaData[j] == null){ continue; }
+			var tx = game.ikaData[j].x;	// X座標
+			var ty = game.ikaData[j].y;	// Y座標
+			if ((bx > tx) && (bx < (tx+game.charSize)) && (by > ty) && (by < (ty+game.charSize))){
+				game.beamData[i] = null;	// ビームを消す
+				game.ikaData[j] = null;	// 敵を消す
+				game.score = game.score + 10;	// 敵を倒すと10点
+				break;	// ループから抜ける
+			}
+		}
+	}
+}
+
+
+------------------------------------------------------------------------------------------------
+■自機と弾の当たり判定
+　最後に自機と弾の当たり判定です。これは若干自機の内側だけを判定しています。というのも、自機のサイズ（32×32）と弾のサイズ（8×8）のまま当たり判定してしまうと、少し接触しただけでやられてしまいます。10章のレッスン40でも説明しましたが、このような場合には当たり判定を小さくしておいた方が親切です（キャラクタの透明部分が多い場合には特に。四角いブロックであれば見た目と当たり範囲が一致するので、厳密に判定しても違和感は少ないでしょう）。
+　本ゲームでは自機と弾の当たり判定部分で一部コメントアウトしてある部分があります。コメントアウトした部分は厳密に当たり判定を行う場合の処理が書かれています。関数を差し替えてテストしてみると当たり判定の厳しさが体験できるでしょう。
+
+
+function hitCheck_fighter_tama(){
+	var fx = game.fighterX + 8;
+	var fy = game.fighterY + 8;
+	for(var i=0; i<game.tamaMax; i++){	// 弾は最大4つ
+		if (game.tamaData[i] == null){ continue; }	// 弾が存在していない場合はループの先頭へ
+		var tx = game.tamaData[i].x;
+		var ty = game.tamaData[i].y;
+		if ( (fx > (tx+8)) || ((fx+16) < tx) || (fy > (ty+8)) || ((fy+16) < ty) ){ continue; }
+		return true;	// 接触した事を知らせる
+	}
+	return false;	// 当たっていない事を知らせる
+}
+
+
+
+　他の処理はこれまでの補習講義を読んでいれば、ほとんど同じですので理解できると思います。マップデータを変更したり敵を増やしてみたり改造すると、よい勉強になるでしょう。
+
+
+
+------------------------------------------------------------------------------------------------
+■HTML (index.html)
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>背景画像付きシューティングゲーム</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/shoot.js"></script>
+	</head>
+	<body>
+		<canvas width="320" height="480">Canvasが使えるブラウザでどうぞ</canvas>
+		<div>マウスを動かすと戦闘機（自機）操作できます
+			<ul>
+				<li><img src="images/fighter.png" id="figter">操作する戦闘機（自機）
+				<li><img src="images/ika.png" id="ika">敵。これを倒す
+				<li><img src="images/beam.png" id="beam">戦闘機のレーザー。三連射が可能
+				<li><img src="images/tama.png" id="tama">敵（イカ）の弾。当たるとやられる
+			</ul>
+		</div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+■JavaScript(shoot.js)
+------------------------------------------------------------------------------------------------
+// 背景画像付きシューティングゲーム
+// Game用の変数
+var context = null;
+var timerID = null;
+var mapImage = new Image();	// マップの画像を入れるためのもの
+var game = {
+	fighterX : 130,	// 自機のマップX座標からのオフセット
+	fighterY : 420,	// 自機のマップY座標からのオフセット
+	mouseX : 0,	// マウスのX座標
+	mouseY : 0,	// マウスのY座標
+	score : 0,	// ゲームのスコア
+	charSize : 32,	// 画像の幅（32×32）
+	mapY : -4800+480,	// マップの初期位置(Y座標)
+	beamMax : 3,	// ビームの最大数
+	beamData : [null, null, null],	// ビームの座標などを入れる配列（3連射）
+	ikaCount : 0,	// 敵の出現頻度制御
+	ikaMax : 6,	// 敵の最大出現数
+	ikaData : [null, null, null, null, null, null ]	,// 敵の座標などを入れる配列（最大6）
+	tamaMax : 4,	// 弾の最大出現数
+	tamaData : [null, null, null, null ]// 弾の座標などを入れる配列（最大4）
+};
+// ページが読み込まれた時の処理
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	context = canvasObj.getContext("2d");
+	window.document.addEventListener("mousemove", moveMyFighter, false);
+	window.document.addEventListener("mousedown", startBeam, false);
+	mapImage.src = "images/map.jpg";
+	mapImage.onload = function(){
+		timerID = setInterval("gameProc()", 50);
+	}
+}, true);
+// 移動＆表示処理
+function gameProc(){
+	context.drawImage(mapImage, 0, game.mapY);	// マップを描画
+	game.mapY = game.mapY + 2;	// マップを移動
+	// マップの最後まで到達したら元に戻す
+	if (game.mapY > -10) { game.mapY = -4800+480; }
+
+	// 自機の移動処理
+	if ((game.mouseX < game.fighterX) && (game.fighterX > 4)){ game.fighterX = game.fighterX - 8; }
+	if ((game.mouseX > game.fighterX) && (game.fighterX < 288)){ game.fighterX = game.fighterX + 8; }
+	if ((game.mouseY < game.fighterY) && (game.fighterY > 160)){ game.fighterY = game.fighterY - 8; }
+	if ((game.mouseY > game.fighterY) && (game.fighterY < 440)){ game.fighterY = game.fighterY + 8; }
+
+	startIka();	// 敵を出現させる
+	moveIka();	// 敵を移動させる
+	moveBeam();	// ビームを移動
+	moveTama();	// 敵弾を移動させる
+
+	drawTama();	// 敵弾を描画する
+	drawBeam();	// ビームを描画
+	drawIka();	// 敵を描画する
+
+	// 自機の表示
+	var img = document.getElementById("figter");
+	context.drawImage(img, game.fighterX, game.fighterY);
+
+	// スコアの表示
+	context.fillStyle = "red";
+	context.font = "normal bold 14px Tahoma";
+	context.fillText("SCORE "+game.score, 5, 20);
+
+	hitCheck_beam_ika();	// ビームと敵の当たり判定
+	// 自機と敵、弾の当たり判定
+	if ((hitCheck_fighter_tama() == true) || (hitCheck_fighter_ika() == true)){
+		clearInterval(timerID);	// タイマー解除
+		context.fillStyle = "red";
+		context.font = "normal bold 24px Tahoma";
+		context.fillText("GAME OVER", 100, 220);
+	}
+
+}
+// 自分の移動処理
+function moveMyFighter(evt){
+	game.mouseX = evt.clientX-20;
+	game.mouseY = evt.clientY-20;
+}
+// ビームを発射
+function startBeam(){
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){
+			game.beamData[i] = { x : game.fighterX + 16, y : game.fighterY };
+			return;
+		}
+	}
+}
+// ビームの移動処理
+function moveBeam(){
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){ continue; }
+		game.beamData[i].y = game.beamData[i].y - 16;
+		if (game.beamData[i].y < -20){
+			game.beamData[i] = null;	// 画面外に消えたらnullにする
+		}
+	}
+}
+// ビームを描画
+function drawBeam(){
+	var beam = document.getElementById("beam");
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){ continue; }
+		context.drawImage(beam, game.beamData[i].x, game.beamData[i].y);
+	}
+}
+// 敵を出現させる
+function startIka(){
+	game.ikaCount = game.ikaCount + 1;
+	if (game.ikaCount < 32){ return; }	// 32回に1回の割合で敵を出す
+	game.ikaCount = 0;
+	if (game.mapY > -1000){ game.ikaCount = 8; }	// 途中から難易度を上げる
+	if (game.mapY > -2400){ game.ikaCount = 16; }	// 途中から難易度を上げる
+	if (game.mapY > -4000){ game.ikaCount = 24; }	// 途中から難易度を上げる
+
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){
+			var x = Math.random() * 200 + 60;	// 出現X座標
+			var dy = Math.random()* 8 + 8;	// 移動速度
+			var dx = 0;
+			if (game.fighterX < 100){ dx = -2; }
+			if (game.fighterX > 200){ dx = 2; }
+			game.ikaData[i] = { x : x, y : -30, dx : dx, dy : dy };
+			return;
+		}
+	}
+}
+// 敵の移動処理
+function moveIka(){
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){ continue; }
+		game.ikaData[i].x = game.ikaData[i].x + game.ikaData[i].dx;
+		game.ikaData[i].y = game.ikaData[i].y + game.ikaData[i].dy;
+		var n = Math.floor(Math.random() * 8);
+		if ((n == 0) && (game.mapY > -2200)){	// ある程度マップが進んだら弾を撃つ
+			startTama(game.ikaData[i].x+16, game.ikaData[i].y+32);
+		}
+		if (game.ikaData[i].y > 480){ game.ikaData[i] = null; }
+	}
+}
+// 敵の描画処理
+function drawIka(){
+	var ika = document.getElementById("ika");
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){ continue; }
+		context.drawImage(ika, game.ikaData[i].x, game.ikaData[i].y);
+	}
+}
+// 弾を発射
+function startTama(x, y){
+	for(var i=0; i<game.tamaMax; i++){	// 最大4つ
+		if (game.tamaData[i] == null){
+			var dx = 2;	// 縦方向の移動量
+			if (game.fighterX < x){ dx = -2; }
+			var dy = 4;	// 縦方向の移動量
+			if (game.fighterY < y){ dy = -4; }
+			game.tamaData[i] = { x : x , y : y, dx : dx, dy : dy };
+			return;
+		}
+	}
+}
+// 弾の移動処理
+function moveTama(){
+	for(var i=0; i<game.tamaMax; i++){	// 最大4つ
+		if (game.tamaData[i] == null){ continue; }
+		game.tamaData[i].x = game.tamaData[i].x + game.tamaData[i].dx;
+		game.tamaData[i].y = game.tamaData[i].y + game.tamaData[i].dy;
+		if ((game.tamaData[i].y < -20) || (game.tamaData[i].y > 480)){
+			game.tamaData[i] = null;	// 画面外に消えたらnullにする
+		}
+	}
+}
+// 弾を描画
+function drawTama(){
+	var tama = document.getElementById("tama");
+	for(var i=0; i<game.tamaMax; i++){	// 最大4つ
+		if (game.tamaData[i] == null){ continue; }
+		context.drawImage(tama, game.tamaData[i].x, game.tamaData[i].y);
+	}
+}
+// ビームと敵の当たり判定
+function hitCheck_beam_ika(){
+	for(var i=0; i<game.beamMax; i++){	// 3連射
+		if (game.beamData[i] == null){ continue; }	// ビームが存在していない場合はループの先頭へ
+		var bx = game.beamData[i].x;
+		var by = game.beamData[i].y;
+		for(var j=0; j<game.ikaMax; j++){	// 敵は最大6つなので6
+			if (game.ikaData[j] == null){ continue; }
+			var tx = game.ikaData[j].x;	// X座標
+			var ty = game.ikaData[j].y;	// Y座標
+			if ((bx > tx) && (bx < (tx+game.charSize)) && (by > ty) && (by < (ty+game.charSize))){
+				game.beamData[i] = null;	// ビームを消す
+				game.ikaData[j] = null;	// 敵を消す
+				game.score = game.score + 10;	// 敵を倒すと10点
+				break;	// ループから抜ける
+			}
+		}
+	}
+}
+// 弾と自機の当たり判定（厳密な判定）
+/*
+function hitCheck_fighter_tama(){
+	var fx = game.fighterX;
+	var fy = game.fighterY;
+	for(var i=0; i<game.tamaMax; i++){	// 弾は最大4つ
+		if (game.tamaData[i] == null){ continue; }	// 弾が存在していない場合はループの先頭へ
+		var tx = game.tamaData[i].x;
+		var ty = game.tamaData[i].y;
+		if ( (fx > (tx+8)) || ((fx+32) < tx) || (fy > (ty+8)) || ((fy+32) < ty) ){ continue; }
+		return true;	// 接触した事を知らせる
+	}
+	return false;	// 当たっていない事を知らせる
+}
+*/
+// 弾と自機の当たり判定（緩く判定）
+function hitCheck_fighter_tama(){
+	var fx = game.fighterX + 8;
+	var fy = game.fighterY + 8;
+	for(var i=0; i<game.tamaMax; i++){	// 弾は最大4つ
+		if (game.tamaData[i] == null){ continue; }	// 弾が存在していない場合はループの先頭へ
+		var tx = game.tamaData[i].x;
+		var ty = game.tamaData[i].y;
+		if ( (fx > (tx+8)) || ((fx+16) < tx) || (fy > (ty+8)) || ((fy+16) < ty) ){ continue; }
+		return true;	// 接触した事を知らせる
+	}
+	return false;	// 当たっていない事を知らせる
+}
+// 敵と自機の当たり判定（緩く判定）
+function hitCheck_fighter_ika(){
+	var fx = game.fighterX + 4;
+	var fy = game.fighterY + 4; 
+	for(var i=0; i<game.ikaMax; i++){	// 弾は最大6つ
+		if (game.ikaData[i] == null){ continue; }	// 弾が存在していない場合はループの先頭へ
+		var tx = game.ikaData[i].x;
+		var ty = game.ikaData[i].y;
+		if ( (fx > (tx+28)) || ((fx+24) < tx) || (fy > (ty+28)) || ((fy+24) < ty) ){ continue; }
+		return true;	// 接触した事を知らせる
+	}
+	return false;	// 当たっていない事を知らせる
+}
+------------------------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------------------------
+■補習のおまけ
+　補習のおまけでゲームにBGMを付けてみましょう。HTML5で音楽を演奏するには3章で学習したaudio要素を使います。今回はMP3形式のBGMを演奏します。このため、ブラウザによっては演奏されません。そのような場合は本書に書いてあるように処理してください。
+　単純にMP3形式のデータを再生するには以下のようにします。ゲームのBGMなのでループするものになっています。loopを指定すれば繰り返しBGMが再生されます。Firefoxではloopを指定しても無効です。その場合の処理方法は本書の3章を参考にしてください。（endedイベントを利用）
+
+<audio src="sound/bgm.mp3" loop></audio>
+
+　次にBGMの再生はページデータが読み込まれた後に行います。BGMの音量などを調整した後、play()メソッドで再生を開始します。
+
+// オーディオの再生
+var ae = document.getElementsByTagName("audio")[0];
+ae.volume = 0.25;	// ボリューム調整
+ae.play();	// 再生開始
+
+
+　ゲームオーバーになった場合にはBGMを止めます。これは以下のようにpause()メソッドを使います。
+
+
+// BGMを停止する
+var ae = document.getElementsByTagName("audio")[0];
+ae.pause();
+
+
+ダウンロードデータに含まれているBGMは短いものですが、長いBGMを作成して入れ替えてみるのもよいでしょう。
+
+
+曲制作：西尾将人
+
+
+------------------------------------------------------------------------------------------------
+【HTML】
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>背景画像付きシューティングゲーム</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/shoot.js"></script>
+	</head>
+	<body>
+		<canvas width="320" height="480">Canvasが使えるブラウザでどうぞ</canvas>
+		<div>マウスを動かすと戦闘機（自機）操作できます
+			<ul>
+				<li><img src="images/fighter.png" id="figter">操作する戦闘機（自機）
+				<li><img src="images/ika.png" id="ika">敵。これを倒す
+				<li><img src="images/beam.png" id="beam">戦闘機のレーザー。三連射が可能
+				<li><img src="images/tama.png" id="tama">敵（イカ）の弾。当たるとやられる
+			</ul>
+		</div>
+		<audio src="sound/bgm.mp3" loop></audio>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+【JavaScript】shoot.js
+------------------------------------------------------------------------------------------------
+// 背景画像付きシューティングゲーム
+// Game用の変数
+var context = null;
+var timerID = null;
+var mapImage = new Image();	// マップの画像を入れるためのもの
+var game = {
+	fighterX : 130,	// 自機のマップX座標からのオフセット
+	fighterY : 420,	// 自機のマップY座標からのオフセット
+	mouseX : 0,	// マウスのX座標
+	mouseY : 0,	// マウスのY座標
+	score : 0,	// ゲームのスコア
+	charSize : 32,	// 画像の幅（32×32）
+	mapY : -4800+480,	// マップの初期位置(Y座標)
+	beamMax : 3,	// ビームの最大数
+	beamData : [null, null, null],	// ビームの座標などを入れる配列（3連射）
+	ikaCount : 0,	// 敵の出現頻度制御
+	ikaMax : 6,	// 敵の最大出現数
+	ikaData : [null, null, null, null, null, null ]	,// 敵の座標などを入れる配列（最大6）
+	tamaMax : 4,	// 弾の最大出現数
+	tamaData : [null, null, null, null ]// 弾の座標などを入れる配列（最大4）
+};
+// ページが読み込まれた時の処理
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	context = canvasObj.getContext("2d");
+	window.document.addEventListener("mousemove", moveMyFighter, false);
+	window.document.addEventListener("mousedown", startBeam, false);
+	mapImage.src = "images/map.jpg";
+	mapImage.onload = function(){
+		timerID = setInterval("gameProc()", 50);
+	}
+	// オーディオの再生
+	var ae = document.getElementsByTagName("audio")[0];
+	ae.volume = 0.25;	// ボリューム調整
+	ae.play();	// 再生開始
+}, true);
+// 移動＆表示処理
+function gameProc(){
+	context.drawImage(mapImage, 0, game.mapY);	// マップを描画
+	game.mapY = game.mapY + 2;	// マップを移動
+	// マップの最後まで到達したら元に戻す
+	if (game.mapY > -10) { game.mapY = -4800+480; }
+
+	// 自機の移動処理
+	if ((game.mouseX < game.fighterX) && (game.fighterX > 4)){ game.fighterX = game.fighterX - 8; }
+	if ((game.mouseX > game.fighterX) && (game.fighterX < 288)){ game.fighterX = game.fighterX + 8; }
+	if ((game.mouseY < game.fighterY) && (game.fighterY > 160)){ game.fighterY = game.fighterY - 8; }
+	if ((game.mouseY > game.fighterY) && (game.fighterY < 440)){ game.fighterY = game.fighterY + 8; }
+
+	startIka();	// 敵を出現させる
+	moveIka();	// 敵を移動させる
+	moveBeam();	// ビームを移動
+	moveTama();	// 敵弾を移動させる
+
+	drawTama();	// 敵弾を描画する
+	drawBeam();	// ビームを描画
+	drawIka();	// 敵を描画する
+
+	// 自機の表示
+	var img = document.getElementById("figter");
+	context.drawImage(img, game.fighterX, game.fighterY);
+
+	// スコアの表示
+	context.fillStyle = "red";
+	context.font = "normal bold 14px Tahoma";
+	context.fillText("SCORE "+game.score, 5, 20);
+
+	hitCheck_beam_ika();	// ビームと敵の当たり判定
+	// 自機と敵、弾の当たり判定
+	if ((hitCheck_fighter_tama() == true) || (hitCheck_fighter_ika() == true)){
+		clearInterval(timerID);	// タイマー解除
+		context.fillStyle = "red";
+		context.font = "normal bold 24px Tahoma";
+		context.fillText("GAME OVER", 100, 220);
+		// BGMを停止する
+		var ae = document.getElementsByTagName("audio")[0];
+		ae.pause();
+	}
+
+}
+// 自分の移動処理
+function moveMyFighter(evt){
+	game.mouseX = evt.clientX-20;
+	game.mouseY = evt.clientY-20;
+}
+// ビームを発射
+function startBeam(){
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){
+			game.beamData[i] = { x : game.fighterX + 16, y : game.fighterY };
+			return;
+		}
+	}
+}
+// ビームの移動処理
+function moveBeam(){
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){ continue; }
+		game.beamData[i].y = game.beamData[i].y - 16;
+		if (game.beamData[i].y < -20){
+			game.beamData[i] = null;	// 画面外に消えたらnullにする
+		}
+	}
+}
+// ビームを描画
+function drawBeam(){
+	var beam = document.getElementById("beam");
+	for(var i=0; i<game.beamMax; i++){	// 三連射
+		if (game.beamData[i] == null){ continue; }
+		context.drawImage(beam, game.beamData[i].x, game.beamData[i].y);
+	}
+}
+// 敵を出現させる
+function startIka(){
+	game.ikaCount = game.ikaCount + 1;
+	if (game.ikaCount < 32){ return; }	// 32回に1回の割合で敵を出す
+	game.ikaCount = 0;
+	if (game.mapY > -1000){ game.ikaCount = 8; }	// 途中から難易度を上げる
+	if (game.mapY > -2400){ game.ikaCount = 16; }	// 途中から難易度を上げる
+	if (game.mapY > -4000){ game.ikaCount = 24; }	// 途中から難易度を上げる
+
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){
+			var x = Math.random() * 200 + 60;	// 出現X座標
+			var dy = Math.random()* 8 + 8;	// 移動速度
+			var dx = 0;
+			if (game.fighterX < 100){ dx = -2; }
+			if (game.fighterX > 200){ dx = 2; }
+			game.ikaData[i] = { x : x, y : -30, dx : dx, dy : dy };
+			return;
+		}
+	}
+}
+// 敵の移動処理
+function moveIka(){
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){ continue; }
+		game.ikaData[i].x = game.ikaData[i].x + game.ikaData[i].dx;
+		game.ikaData[i].y = game.ikaData[i].y + game.ikaData[i].dy;
+		var n = Math.floor(Math.random() * 8);
+		if ((n == 0) && (game.mapY > -2200)){	// ある程度マップが進んだら弾を撃つ
+			startTama(game.ikaData[i].x+16, game.ikaData[i].y+32);
+		}
+		if (game.ikaData[i].y > 480){ game.ikaData[i] = null; }
+	}
+}
+// 敵の描画処理
+function drawIka(){
+	var ika = document.getElementById("ika");
+	for(var i=0; i<game.ikaMax; i++){	// 最大6つまで
+		if (game.ikaData[i] == null){ continue; }
+		context.drawImage(ika, game.ikaData[i].x, game.ikaData[i].y);
+	}
+}
+// 弾を発射
+function startTama(x, y){
+	for(var i=0; i<game.tamaMax; i++){	// 最大4つ
+		if (game.tamaData[i] == null){
+			var dx = 2;	// 縦方向の移動量
+			if (game.fighterX < x){ dx = -2; }
+			var dy = 4;	// 縦方向の移動量
+			if (game.fighterY < y){ dy = -4; }
+			game.tamaData[i] = { x : x , y : y, dx : dx, dy : dy };
+			return;
+		}
+	}
+}
+// 弾の移動処理
+function moveTama(){
+	for(var i=0; i<game.tamaMax; i++){	// 最大4つ
+		if (game.tamaData[i] == null){ continue; }
+		game.tamaData[i].x = game.tamaData[i].x + game.tamaData[i].dx;
+		game.tamaData[i].y = game.tamaData[i].y + game.tamaData[i].dy;
+		if ((game.tamaData[i].y < -20) || (game.tamaData[i].y > 480)){
+			game.tamaData[i] = null;	// 画面外に消えたらnullにする
+		}
+	}
+}
+// 弾を描画
+function drawTama(){
+	var tama = document.getElementById("tama");
+	for(var i=0; i<game.tamaMax; i++){	// 最大4つ
+		if (game.tamaData[i] == null){ continue; }
+		context.drawImage(tama, game.tamaData[i].x, game.tamaData[i].y);
+	}
+}
+// ビームと敵の当たり判定
+function hitCheck_beam_ika(){
+	for(var i=0; i<game.beamMax; i++){	// 3連射
+		if (game.beamData[i] == null){ continue; }	// ビームが存在していない場合はループの先頭へ
+		var bx = game.beamData[i].x;
+		var by = game.beamData[i].y;
+		for(var j=0; j<game.ikaMax; j++){	// 敵は最大6つなので6
+			if (game.ikaData[j] == null){ continue; }
+			var tx = game.ikaData[j].x;	// X座標
+			var ty = game.ikaData[j].y;	// Y座標
+			if ((bx > tx) && (bx < (tx+game.charSize)) && (by > ty) && (by < (ty+game.charSize))){
+				game.beamData[i] = null;	// ビームを消す
+				game.ikaData[j] = null;	// 敵を消す
+				game.score = game.score + 10;	// 敵を倒すと10点
+				break;	// ループから抜ける
+			}
+		}
+	}
+}
+// 弾と自機の当たり判定（厳密な判定）
+/*
+function hitCheck_fighter_tama(){
+	var fx = game.fighterX;
+	var fy = game.fighterY;
+	for(var i=0; i<game.tamaMax; i++){	// 弾は最大4つ
+		if (game.tamaData[i] == null){ continue; }	// 弾が存在していない場合はループの先頭へ
+		var tx = game.tamaData[i].x;
+		var ty = game.tamaData[i].y;
+		if ( (fx > (tx+8)) || ((fx+32) < tx) || (fy > (ty+8)) || ((fy+32) < ty) ){ continue; }
+		return true;	// 接触した事を知らせる
+	}
+	return false;	// 当たっていない事を知らせる
+}
+*/
+// 弾と自機の当たり判定（緩く判定）
+function hitCheck_fighter_tama(){
+	var fx = game.fighterX + 8;
+	var fy = game.fighterY + 8;
+	for(var i=0; i<game.tamaMax; i++){	// 弾は最大4つ
+		if (game.tamaData[i] == null){ continue; }	// 弾が存在していない場合はループの先頭へ
+		var tx = game.tamaData[i].x;
+		var ty = game.tamaData[i].y;
+		if ( (fx > (tx+8)) || ((fx+16) < tx) || (fy > (ty+8)) || ((fy+16) < ty) ){ continue; }
+		return true;	// 接触した事を知らせる
+	}
+	return false;	// 当たっていない事を知らせる
+}
+// 敵と自機の当たり判定（緩く判定）
+function hitCheck_fighter_ika(){
+	var fx = game.fighterX + 4;
+	var fy = game.fighterY + 4; 
+	for(var i=0; i<game.ikaMax; i++){	// 弾は最大6つ
+		if (game.ikaData[i] == null){ continue; }	// 弾が存在していない場合はループの先頭へ
+		var tx = game.ikaData[i].x;
+		var ty = game.ikaData[i].y;
+		if ( (fx > (tx+28)) || ((fx+24) < tx) || (fy > (ty+28)) || ((fy+24) < ty) ){ continue; }
+		return true;	// 接触した事を知らせる
+	}
+	return false;	// 当たっていない事を知らせる
+}
+------------------------------------------------------------------------------------------------
+
+
+
+
+

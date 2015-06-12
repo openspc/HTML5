@@ -1,0 +1,2 @@
+		<canvas id="bg" width="128" height="128"></canvas>
+		<canvas id="bgMap" width="128" height="128"></canvas>

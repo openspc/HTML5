@@ -1,0 +1,1 @@
+			空き室状況：<meter min="0" max="50" value="41" low="25" high="40" optimum="0">41部屋予約されています</meter><br>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>宿泊予約</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+	</head>
+	<body>
+		<h1>宿泊予約</h1>
+		<form>
+			ID：<input type="text" id="userID" name="userID" required autofocus><br>
+			料理：<input type="text" id="menu" name="menu" list="menuList" autocomplete="on"><br>
+			<datalist id="menuList">
+				<option value="海鮮丼">海鮮丼</option>
+				<option value="海の幸と山の幸">海の幸と山の幸</option>
+				<option value="海の幸づくし">海の幸づくし</option>
+				<option value="山の幸づくし">山の幸づくし</option>
+				<option value="高級あわび料理">高級あわび料理</option>
+				<option value="高級寿司">高級寿司</option>
+				<option value="うに丼">うに丼</option>
+				<option value="うにいくら丼">うにいくら丼</option>
+				<option value="季節料理">季節料理</option>
+				<option value="季節の野菜料理">季節の野菜料理</option>
+				<option value="季節の魚料理">季節の魚料理</option>
+			</datalist>
+			　予約日：<input type="date" id="resDay" name="resDay" required><br>
+			予約時間：<input type="time" id="resTime" name="resTime" required><br>
+			予約人数：<input type="number" id="resNumber" name="resNumber" min="1" max="20" required>(1-20人)<br>
+			部屋の色：<input type="color" id="roomColor" name="roomColor"><br>
+			　メール：<input type="email" id="mailAddress" name="mailAddress"><br>
+			電話番号：<input type="tel" id="telephone" name="telephone"><br>
+			空き室状況：<meter min="0" max="50" value="41" low="25" high="40" optimum="0">41部屋予約されています</meter><br>
+			<input type="submit" value="送信">
+		</form>
+	</body>
+</html>

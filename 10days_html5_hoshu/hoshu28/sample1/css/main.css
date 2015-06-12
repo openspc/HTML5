@@ -1,0 +1,47 @@
+canvas {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	background-color: black; 
+}
+div {
+	position: absolute;
+	left: 10px;
+	top: 490px;
+}
+#car {
+	position: absolute;
+	left: 192px;
+	top: 256px;
+	z-index: 2;
+}
+#rader {
+	position: absolute;
+	left: 330px;
+	top: 240px;
+	background-color: blue;
+}
+.key38 {	/* 上方向 */
+	-webkit-transform : rotate(0deg);
+	-moz-transform: rotate(0deg);
+	-ms-transform: rotate(0deg);
+	-o-transform: rotate(0deg);
+}
+.key40 {	/* 下方向 */
+	-webkit-transform : rotate(180deg);
+	-moz-transform: rotate(180deg);
+	-ms-transform: rotate(180deg);
+	-o-transform: rotate(180deg);
+}
+.key37 {	/* 左方向 */
+	-webkit-transform : rotate(-90deg);
+	-moz-transform: rotate(-90deg);
+	-ms-transform: rotate(-90deg);
+	-o-transform: rotate(-90deg);
+}
+.key39 {	/* 右方向 */
+	-webkit-transform : rotate(90deg);
+	-moz-transform: rotate(90deg);
+	-ms-transform: rotate(90deg);
+	-o-transform: rotate(90deg);
+}

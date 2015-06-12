@@ -1,0 +1,213 @@
+■補講　Canvasを使ったゲーム（スカッシュ）
+　本書の10章ではタッチセンサーとCanvasを使ってゲームを作成しました。この補習ではCanvasを使ってスカッシュというゲームを作成してみましょう。このスカッシュというゲームは一人テニスといった方が分かりやすいでしょう。一人で壁に向かって、ひたすらボールを打つだけです。
+　ひたすら打ち返すだけでは面白くないので多少ゲームらしく、一度ボールを跳ね返したらパドルの横幅を1ピクセルずつ小さくしていくことにします。これで、ボールを打ち返すのが難しくなっていきます。とは言っても、1ピクセルではさすがに無理があるので最小で8ピクセルまでにしておきます。あまり難しいゲームは遊んでもらえないからです。
+
+
+------------------------------------------------------------------------------------------------
+■初期化
+　このゲームではCanvas上にボールとパドル（ラケット）の２つを描画します。ボールは一定方向に移動し壁かパドルに当たると跳ね返ります。パドルはマウスの動きに合わせて左右に動きます。
+
+　まず、最初にゲームで使うためのオブジェクトとプロパティを用意します。今回はgameというオブジェクトを用意し、そこにボールとパドルの座標値などを入れるプロパティを設定します。また、Canvasのコンテキストを示すための変数contextとタイマー用の変数timerIDを用意します。HTML5では従来のタイマー／インターベルタイマーだけでなくアニメーション処理用のrequestAnimationFrameがあります（2011年9月時点ではベンダープレフィックスが必要です）。requestAnimationFrameを使いたいところですが、動作させたら解除できない（するメソッドがない）ブラウザがあるので、ここでは従来通りタイマーを使って処理します。
+
+　ゲーム用のプロパティは以下のようになっています。
+
+var game = {
+	ballX : 0,	←ボールのX座標
+	ballY : 0,	←ボールのY座標
+	ballDX : 4.3,	←ボールの横方向の移動量
+	ballDY : 3.9,	←ボールの縦方向の移動量
+	padX : 10,	←パドル（ラケット）のX座標
+	padY : 440,	←パドル（ラケット）のY座標
+	padWidth : 50,	←パドル（ラケット）の横幅
+	padHeight : 10	←パドル（ラケット）の縦幅
+};
+
+　ボールの移動量が整数値でなく小数値になっています。このようにしておくと、ボールの移動方向が壁やパドル（ラケット）に反射した際、少しずつずれていきワンパターンな軌跡になりにくくなります。
+
+　初期後はページが読み込まれた後の処理です。本書で学習したようにCanvasから2Dコンテキストを取得します。
+その後、タイマーでボールの移動処理を行うように設定します。そして、canvas要素上でマウスが動いた際にパドル（ラケット）を移動させるための処理／イベントハンドラ（movePaddle関数）を設定します。
+
+
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	context = canvasObj.getContext("2d");
+	timerID = setInterval("moveBall()", 25);
+	canvasObj.addEventListener("mousemove", movePaddle, false);
+}, true);
+
+
+これで準備ができました。それでは次にボールを移動させる処理を説明しましょう。
+
+
+------------------------------------------------------------------------------------------------
+■ボールの移動
+　ボールの移動は簡単です。現在のボールのX座標とY座標に移動量を加算するだけです。つまり以下のようになります。
+
+	game.ballX = game.ballX + game.ballDX;
+	game.ballY = game.ballY + game.ballDY;
+
+ただし、このままボールが移動していくと画面からはみ出してしまいます。壁に当たった場合には反射させなければなりません。ボールを反射させるには移動量の符号を反転させます。移動量の符号を反転させるという事は-1を乗算することになります。と言っても-1を乗算するように記述することはなくJavaScript（やBASIC）では以下のように-をつければ符号が反転します。
+
+
+	if (game.ballX < 0) { game.ballDX = -game.ballDX; }	// 壁に当たったら移動方向を反対にする
+	if (game.ballX > 639) { game.ballDX = -game.ballDX; }
+	if (game.ballY < 0) { game.ballDY = -game.ballDY; }
+
+
+------------------------------------------------------------------------------------------------
+■ゲームオーバーの判定
+　ボールがCanvasの一番下を超えたらゲームオーバーです。これはボールのY座標を調べてCanvasより大きい（ここでは479）場合にはタイマーを停止させ、ゲームオーバーの表示を行います。
+
+
+	if (game.ballY > 479) {
+		clearInterval(timerID);
+		alert("Game Over");
+	}
+
+ここではアラートダイアログにゲームオーバーの表示をしていますが、CanvasにfillText()を使って文字を描画してもよいでしょう。
+
+
+------------------------------------------------------------------------------------------------
+■ボールとパドルの接触判定
+　次にボールがパドルに当たった場合に跳ね返す部分の処理を見てみましょう。まず、ボールのY座標を調べます。パドルのY座標まで到達していない場合は以後の処理を行わないようにします。
+
+
+	if (game.ballY < game.padY) { return; }	// パドル位置まで達していない
+
+
+また、パドルを完全に超えてしまった場合でも処理を行わないようにします。
+
+
+	if (game.ballY > (game.padY+game.padHeight)) { return; }	// パドル位置を超えた
+
+
+ここまで来たら、パドルにボールがあたる条件としては「ボールのX座標がパドルのX座標以上で、なおかつボールのX座標がパドルの横幅以内」ということになります。本当はボールの幅があるので、それも加味しなければいけませんが、今回のゲームのボールは2ピクセルなのでほとんど分かりません。ゲームの場合は、必ずしも正確に処理しなくてもわからない事が多いので手抜きしても分からない部分、ゲームに影響をあまり与えない部分は適当でも構いません。
+　ボールドパドルが接触したらボールの移動方向を反転させます。そして、パドルの横幅を1つ小さくします。ただし、8ピクセルより小さくないらないようにif()を使って判定し調整します。
+
+	if ((game.ballX >= game.padX) && (game.ballX <= (game.padX+game.padWidth))){
+		game.ballDY = -game.ballDY;
+		game.padWidth = game.padWidth - 1;	// パドルを小さくしていく
+		if (game.padWidth < 8) { game.padWidth = 8; }
+	}
+
+
+------------------------------------------------------------------------------------------------
+■パドル（ラケット）の移動
+　次にパドルの移動処理です。Canvas上でマウスが動くとmovePaddle関数が呼び出されます。この関数内ではgameオブジェクトのpadXプロパティにマウスの座標を入れるだけです。ただ、そのままマウスの座標とを入れてしまうと、マウス位置がパドルの左端になってしまうので、マウスがパドルの中心くらいになるように調整します。パドルのサイズが小さくなっていくと、ずれてしまいます。気になるのであればgameオブジェクトのpadWidthプロパティにパドル幅が入っていますから、1/2にしてマウス座標から減算すればよいでしょう。
+
+
+function movePaddle(evt){
+	game.padX = evt.clientX - 25;
+}
+
+
+------------------------------------------------------------------------------------------------
+■ボール／パドルの消去と表示
+　HTMLのDOMを利用してゲームを作成した場合は、ブラウザが自動的に消去＆表示処理を行ってくれます。しかし、Canvas内に描画する場合は自前で消去＆表示処理を行わなければいけません。
+　まず、ボールですが移動計算をする前に以下のようにして消します。ボールは2×2ピクセルなのですが、消す場合は4×4ピクセル必要です。これは、ボールの移動量を小数値にしているためです。整数値であれば問題ありませんが、小数値の場合、描画時にアンチエイリアスが適用されてしまいます。このアンチエイリアス部分も消去しなければいけません。それに必要なのが4ピクセルというわけです。3ピクセルにして見てみるとCanvasにゴミが残っていくのがわかります。
+
+
+	context.fillStyle = "black";
+	context.fillRect(game.ballX-1, game.ballY-1, 4, 4);
+
+
+次にパドルも消去します。パドルは左端から右端まで一括して黒色で塗り潰します（＝消去）。どうして、こうなっているかというと単純に面倒だからです。もちろん速度的に問題がある場合は消す部分は小さくしておいた方がベストです。
+
+	context.fillRect(0, game.padY, 640, 10);	// パドルも消す
+
+消した後に移動量の計算を行います。計算が終わったら表示処理です。ボールもパドルも四角になっていますので以下のようにfillRect()を使って表示します。fillRect()のパラメータ等については本書の7章を参照にしてください。
+
+
+	context.fillStyle = "white";
+	context.fillRect(game.ballX, game.ballY, 2, 2);
+	context.fillStyle = "yellow";
+	context.fillRect(game.padX, game.padY, game.padWidth, game.padHeight);	// パドルを描く
+
+
+これでゲームが完成しました。シンプルなゲームなので、すぐに飽きてしまうでしょう。スコアを加算するとか、背景を付けるとか、いろいろ工夫してみると勉強になるでしょう。
+
+
+
+------------------------------------------------------------------------------------------------
+■HTML (index.html)
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Squash（スカッシュ）</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/squash.js"></script>
+	</head>
+	<body>
+		<h1>Squash（スカッシュ）</h1>
+		<canvas width="640" height="480">Canvasが使えるブラウザでどうぞ</canvas>
+		<div>Canvas上でマウスを動かしてください</div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+■JavaScript(squash.js)
+------------------------------------------------------------------------------------------------
+// スカッシュ（パドルでボールを打つだけのゲーム）
+// Game用の変数
+var context = null;
+var timerID = null;
+var game = {
+	ballX : 0,
+	ballY : 0,
+	ballDX : 4.3,
+	ballDY : 3.9,
+	padX : 10,
+	padY : 440,
+	padWidth : 50,
+	padHeight : 10
+};
+// ページが読み込まれた時の処理
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	context = canvasObj.getContext("2d");
+	timerID = setInterval("moveBall()", 25);
+	canvasObj.addEventListener("mousemove", movePaddle, false);
+}, true);
+// ボールの移動＆表示処理
+function moveBall(){
+	context.fillStyle = "black";
+	context.fillRect(game.ballX-1, game.ballY-1, 4, 4);
+	context.fillRect(0, game.padY, 640, 10);	// パドルも消す
+	game.ballX = game.ballX + game.ballDX;
+	game.ballY = game.ballY + game.ballDY;
+	if (game.ballX < 0) { game.ballDX = -game.ballDX; }	// 壁に当たったら移動方向を反対にする
+	if (game.ballX > 639) { game.ballDX = -game.ballDX; }
+	if (game.ballY < 0) { game.ballDY = -game.ballDY; }
+	if (game.ballY > 479) {
+		clearInterval(timerID);
+		alert("Game Over");
+	}
+	context.fillStyle = "white";
+	context.fillRect(game.ballX, game.ballY, 2, 2);
+	context.fillStyle = "yellow";
+	context.fillRect(game.padX, game.padY, game.padWidth, game.padHeight);	// パドルを描く
+	// ボールとパドルの接触判定
+	if (game.ballY < game.padY) { return; }	// パドル位置まで達していない
+	if (game.ballY > (game.padY+game.padHeight)) { return; }	// パドル位置を超えた
+	if ((game.ballX >= game.padX) && (game.ballX <= (game.padX+game.padWidth))){
+		game.ballDY = -game.ballDY;
+		game.padWidth = game.padWidth - 1;	// パドルを小さくしていく
+		if (game.padWidth < 8) { game.padWidth = 8; }
+	}
+}
+// パドルの移動処理
+function movePaddle(evt){
+	game.padX = evt.clientX - 25;
+}
+------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+

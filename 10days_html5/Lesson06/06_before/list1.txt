@@ -1,0 +1,7 @@
+				赤：<input type="range" name="red"
+						min="0"
+						max="255"
+						step="10"
+				><br>
+				緑：<input type="range" name="green" min="0" max="255" step="20"><br>
+				青：<input type="range" name="blue" min="0" max="255" step="50"><br>

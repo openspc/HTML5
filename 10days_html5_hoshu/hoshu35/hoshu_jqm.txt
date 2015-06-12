@@ -1,0 +1,414 @@
+■補講　jQuery Mobileを使ってみよう
+　本書の10章ではスマートフォン向けにサンプルを作成しました。10章では主にタッチセンサー、加速度センサーについて解説しました。本書はHTML5の入門書ですが、スマートフォンにおいて欠かせないものがUIライブラリです。UIはユーザーインターフェースの事です。
+　スマートフォン、つまりiPhone/Android（あとはBlackBerryやWindows Phone）では、標準で用意されているUIがあります。ところが、スマートフォン上で動作するブラウザではOSが用意しているUIを利用することができません。このため、HTML5を使ってWebアプリまたはネイティブアプリを作成する場合は、OSに合わせた（似せた）UIを用意しなければいけません。（もちろんクライアントから、そんな要求がなければスルー）ネイティブアプリをHTML5で作成できるモバイルフレームワークであるPhoneGapやTitanium、JSWaffleやNimbleKitなどは一部OSのUIをサポートしています。
+
+---------------------------------
+【表】HTML+CSS+JavaScriptでネイティブアプリを構築できるモバイルフレームワーク
+---------------------------------
+●Titanium
+　http://www.appcelerator.com/
+●PhoneGap
+　http://www.phonegap.com/
+●NimbleKit (iPhone専用)
+　http://www.nimblekit.com/
+●JSWaffle (Android専用)
+　http://d.aoikujira.com/jsWaffle/wiki/
+---------------------------------
+
+　しかし、ネイティブアプリ以外、つまりWebアプリを作成する場合はUIの作成はなかなか面倒です。スムーズにアニメーションさせるなどビジュアル面も重視されることもあります。
+　そんな時に便利なのがUIフレームワークです。UIフレームワークは多数出ており以下のようなものがあります。
+
+---------------------------------
+【表】UIフレームワーク
+---------------------------------
+●jQuery Mobile
+　http://jquerymobile.com/
+●Sencha Touch
+　http://extjs.co.jp/products/touch/
+●jQTouch
+　http://jqtouch.com/
+●jQuery iPhone UI
+　http://iphone.hohli.com/
+●iWebKit
+　http://iwebkit.net/
+●iUI
+　http://code.google.com/p/iui/
+---------------------------------
+
+
+それぞれサポートしているUI機能が異なるので、使いたいUIが用意されているかは最初に確認しておいてください。また、多機能のUIの場合は処理速度が遅いことがあります。
+
+ここでは、多分本命と思われるjQuery Mobileについて説明します。ここでは正式版である1.0を使っていますが、もしかしたらバージョンアップにより変更されるところが出て来るかもしれません。
+また、jQuery Mobileで検索すれば、使い方などを説明したサイトや連載記事などがでてきますので、それらを参考にするのもよいでしょう。
+
+
+------------------------------------------------------------------------------------------------
+■jQuery Mobileをダウンロードする
+　まず、以下のページにアクセスしてjQueryをダウンロードします。jQuery Mobile 1.0の場合は、jQuery 1.6.4を使用します。すでに新しいバージョンがありますが、1.6.4を利用するようにしてください。
+
+http://docs.jquery.com/Downloading_jQuery
+
+jQueryの場合はCDNで直接ネットワークからダウンロードすることもできます。ダウンロードできるホストは以下のページを参照してください。
+
+http://docs.jquery.com/Downloading_jQuery#CDN_Hosted_jQuery
+
+なお、以後のサンプルではjQueryライブラリのファイル名を「jquery.js」にリネーム（名前を変更）して使用しています。
+次にjQuery Mobile 1.0をダウンロードします。
+
+http://jquerymobile.com/download/
+
+jquery.mobile-1.0.zipファイルを解凍すると以下のファイル／フォルダが作成されます。この中で使用するのは★印をつけたものです。
+
+--------------------------------
+【表】展開されるファイルとフォルダ
+--------------------------------
+demoフォルダ
+imagesフォルダ★
+jquery.mobile-1.0.css
+jquery.mobile-1.0.js
+jquery.mobile-1.0.min.css★
+jquery.mobile-1.0.min.js★
+jquery.mobile.structure-1.0.css
+jquery.mobile.structure-1.0.min.css
+--------------------------------
+
+
+なお、以後に解説するサンプルでは、それぞれのファイルを以下のようにリネーム（名前を変更）して使用しています。
+
+jquery.mobile-1.0.min.css　→　jquery.mobile.css
+jquery.mobile-1.0.min.js　→　jquery.mobile.js
+
+cssフォルダ内にimagesフォルダとjquery.mobile.cssファイルを、jsフォルダにjquery.mobile.jsファイルを入れておきます。
+
+
+
+
+------------------------------------------------------------------------------------------------
+■1ページ表示してみる
+　それではjQuery Mobileを使って1ページだけ表示してみましょう。都合のよい事にjQuery Mobileのページには、ページ表示のパターンの説明があります。1ページの場合は以下のページに解説があります。（英語です）
+
+http://jquerymobile.com/demos/1.0/docs/pages/page-anatomy.html
+
+　上記ページを参考にしてjQuery Mobileに対応したページを作成してみましょう。まず、HTML5で作成する（マークアップする）ことが前提になっています。というのもjQuery MobileではHTML5のカスタムデータ属性を使っているためです。（カスタムデータ属性については本書の105ページを参照してください）
+　jQueryではdata-roleというカスタムデータ属性が使用されています。このdata-role属性にはページの、どの部分なのかを示す文字列を指定します。
+
+-------------------------------------------------
+【表】data-roleに指定する文字列
+-------------------------------------------------
+page	ページを示す。複数ある場合は必要な数だけ記述する。
+header	ページヘッダー。画面の上部の部分。
+content	ページの本文
+footer	ページフッター。画面の下部の部分。
+-------------------------------------------------
+
+jQuery Mobileの基本構造としては以下のようになります。
+
+<div data-role="page">
+<div data-role="header"></div>
+<div data-role="content"></div>
+<div data-role="footer"></div>
+</div>
+
+HTML5でheaderなのにdiv要素というのはHTML5に対応していないか、中途半端に対応しているブラウザのために用意されているのだと思われます。ちなみにヘッダー部分とフッター部分をHTML5のheaderとfooterにしても同じように表示されます。
+
+基本構造を元に1ページだけのものをjQuery Mobileで構築したのが以下のHTMLになります。
+
+
+------------------------------------------------------------------------------------------------
+■HTML
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>jQuery Mobile Sample</title>
+		<link rel="stylesheet" href="css/jquery.mobile.css">
+		<script src="js/jquery.js"></script>
+		<script src="js/jquery.mobile.js"></script>
+	</head>
+	<body>
+		<div data-role="page">
+			<div data-role="header">
+				<h1>Retro Game</h1>
+			</div>
+			<div data-role="content">	
+				<p>
+					レトロゲームとは1995年以前の古いゲームの事。<br>
+					MZ, FM, PCなど御三家のパソコン上で動いていたゲームは、今となっては貴重品。<br>
+					あと、アーケードゲーム（ゲームセンターのゲーム）も
+				</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------
+■複数のページ表示してみる
+　それでは次に複数ページ表示してみましょう。複数ページと言っても1つのHTMLファイルに全て入れる場合と、非同期通信を使って他のページを読み込む場合があります。ここでは1つのHTMLファイルに複数のページを入れて見ましょう。
+　複数ページを1つのHTMLファイルに入れる場合は以下のように、入れたいページ数だけ1ページの構造を入れ込みます。
+
+
+<div data-role="page">
+<div data-role="header"></div>
+<div data-role="content"></div>
+<div data-role="footer"></div>
+</div>
+<div data-role="page">
+<div data-role="header"></div>
+<div data-role="content"></div>
+<div data-role="footer"></div>
+</div>
+<div data-role="page">
+<div data-role="header"></div>
+<div data-role="content"></div>
+<div data-role="footer"></div>
+</div>
+
+
+　複数ページの場合、これだけでは機能しません。というのも他のページへのリンクがないためです。jQuery MobileはHTML5ベースなので、ページ内にリンクする（アンカー）場合は、あらかじめdiv要素にID名を指定しておきます。つまり以下のようにdata-role="page"で指定されているdiv要素にID名を付けておくわけです。
+
+<div data-role="page" id="mz">
+
+このようにしておくと以下のようにしてページ内で移動することができます。HTML5では以前と異なり<a name>ではなく要素に付けられたID名がアンカーになります。
+
+<a href="#mz">mzのページへ</a>
+
+実際のサンプルは以下のようになります。リンクをクリックすると該当ページがスライドしながら表示されます。
+
+
+------------------------------------------------------------------------------------------------
+■HTML
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>jQuery Mobile Sample</title>
+		<link rel="stylesheet" href="css/jquery.mobile.css">
+		<script src="js/jquery.js"></script>
+		<script src="js/jquery.mobile.js"></script>
+	</head>
+	<body>
+		<div data-role="page">
+			<div data-role="header" data-rel="back">
+				<h1>Retro PC</h1>
+			</div>
+			<div data-role="content">	
+				<p><a href="#mz">MZとは</a></p>		
+				<p><a href="#fm">FMとは</a></p>		
+				<p><a href="#pc">PCとは</a></p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+		<!-- 2ページ目 MZとは -->
+		<div data-role="page" id="mz" >
+			<div data-role="header">
+				<h1>MZとは</h1>
+			</div>
+			<div data-role="content">	
+				<p>MZとはSHARPが発売していたパソコン。CPUはZ80</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+		<!-- 3ページ目 FMとは -->
+		<div data-role="page" id="fm">
+			<div data-role="header">
+				<h1>FMとは</h1>
+			</div>
+			<div data-role="content">	
+				<p>FMとは富士通が発売していたパソコン。CPUは6809</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+		<!-- 2ページ目 PCとは -->
+		<div data-role="page" id="pc">
+			<div data-role="header">
+				<h1>PCとは</h1>
+			</div>
+			<div data-role="content">	
+				<p>PCとはNECが発売していたパソコン。CPUはZ80互換品</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------------------------
+■戻るボタンを付ける
+　先ほどのサンプルを実行するとリンクをクリックした後、次のページは表示されます。しかし、前のページに戻るにはブラウザの戻るボタンをクリックしなければいけません。これでは、やや不便ですのでヘッダー部分に戻るボタンを付けてみましょう。
+　ヘッダー部分に戻るボタンを付けるには以下のようにa要素にdata-rel="back"を指定します。これはヘッダーだけでなく、ページ本文でも可能です。
+
+<a href="index.html" data-rel="back">戻る</a>
+
+　これでヘッダー部分に戻るボタンが付きました。実際のサンプルは以下のようになります。
+
+
+------------------------------------------------------------------------------------------------
+■HTML
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>jQuery Mobile Sample</title>
+		<link rel="stylesheet" href="css/jquery.mobile.css">
+		<script src="js/jquery.js"></script>
+		<script src="js/jquery.mobile.js"></script>
+	</head>
+	<body>
+		<div data-role="page">
+			<div data-role="header">
+				<h1>Retro PC</h1>
+			</div>
+			<div data-role="content">	
+				<p><a href="#mz">MZとは</a></p>		
+				<p><a href="#fm">FMとは</a></p>		
+				<p><a href="#pc">PCとは</a></p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+		<!-- 2ページ目 MZとは -->
+		<div data-role="page" id="mz" >
+			<div data-role="header">
+				<a href="index.html" data-rel="back">戻る</a>
+				<h1>MZとは</h1>
+			</div>
+			<div data-role="content">	
+				<p>MZとはSHARPが発売していたパソコン。CPUはZ80</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+		<!-- 3ページ目 FMとは -->
+		<div data-role="page" id="fm">
+			<div data-role="header">
+				<a href="index.html" data-rel="back">戻る</a>
+				<h1>FMとは</h1>
+			</div>
+			<div data-role="content">	
+				<p>FMとは富士通が発売していたパソコン。CPUは6809</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+		<!-- 2ページ目 PCとは -->
+		<div data-role="page" id="pc">
+			<div data-role="header">
+				<a href="index.html" data-rel="back">戻る</a>
+				<h1>PCとは</h1>
+			</div>
+			<div data-role="content">	
+				<p>PCとはNECが発売していたパソコン。CPUはZ80互換品</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+
+　戻るボタンは表示されましたが、ちょっと格好がよくありません。というのも前のページに戻る事を示す矢印が表示されていないからです。jQuery Mobileではdata-iconというカスタムデータ属性に表示したいアイコンの種類を指定すると、それをボタンの前後下に配置してくれます。
+　以下のようにすると左向きの矢印が表示され、その後に「戻る」の文字が表示されます。
+
+<a href="index.html" data-rel="back" data-icon="arrow-l">戻る</a>
+
+　実際のHTMLは以下のようになります。
+
+
+
+------------------------------------------------------------------------------------------------
+■HTML
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>jQuery Mobile Sample</title>
+		<link rel="stylesheet" href="css/jquery.mobile.css">
+		<script src="js/jquery.js"></script>
+		<script src="js/jquery.mobile.js"></script>
+	</head>
+	<body>
+		<div data-role="page">
+			<div data-role="header">
+				<h1>Retro PC</h1>
+			</div>
+			<div data-role="content">	
+				<p><a href="#mz">MZとは</a></p>		
+				<p><a href="#fm">FMとは</a></p>		
+				<p><a href="#pc">PCとは</a></p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+		<!-- 2ページ目 MZとは -->
+		<div data-role="page" id="mz">
+			<div data-role="header">
+				<a href="index.html" data-rel="back" data-icon="arrow-l">戻る</a>
+				<h1>MZとは</h1>
+			</div>
+			<div data-role="content">	
+				<p>MZとはSHARPが発売していたパソコン。CPUはZ80</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+		<!-- 3ページ目 FMとは -->
+		<div data-role="page" id="fm">
+			<div data-role="header">
+				<a href="index.html" data-rel="back" data-icon="arrow-l">戻る</a>
+				<h1>FMとは</h1>
+			</div>
+			<div data-role="content">	
+				<p>FMとは富士通が発売していたパソコン。CPUは6809</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+		<!-- 2ページ目 PCとは -->
+		<div data-role="page" id="pc">
+			<div data-role="header">
+				<a href="index.html" data-rel="back" data-icon="arrow-l">戻る</a>
+				<h1>PCとは</h1>
+			</div>
+			<div data-role="content">	
+				<p>PCとはNECが発売していたパソコン。CPUはZ80互換品</p>		
+			</div>
+			<div data-role="footer">
+				<p><small>2011 &copy; K.F.</small></p>
+			</div>
+		</div>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+
+
+　ここまでjQuery Mobileの簡単な使い方を説明してきました。jQuery Mobileはカスタムデータ属性を利用することで様々な機能や表現を可能にしています。jQuery Mobileは基本的にプログラミングは不要です。カスタムデータ属性に必要な値を指定するだけで、UIを構築することができます。
+　jQuery Mobileは1.0になりましたが、Android端末／タブレットでは、あまりスムーズに動作しません。パソコンやiPhone/iPadでは申し分ありませんが、AndroidではjQuery本体が速くならないと速度＆見た目にいまいちな状態です。
+
+
+
+
+

@@ -1,0 +1,3 @@
+			タイトル：<input type="text" name="dialyTitle" id="dialyTitle" placeholder="タイトルを入れてください"><br>
+			日　　付：<input type="text" name="dialyDate" id="dialyDate"><br>
+			<textarea rows="5" cols="30" name="dialyContents" id="dialyContents" placeholder="今日あった出来事を入れてください"></textarea>

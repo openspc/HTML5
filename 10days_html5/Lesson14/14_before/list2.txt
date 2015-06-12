@@ -1,0 +1,2 @@
+			<input type="button" id="saveButton" value="保存する">
+			<input type="button" id="loadButton" value="保存した日記を読み出す">（読み出したい日付を先に入れてください）

@@ -1,0 +1,5 @@
+			赤：<input type="text" id="red" value="255" size="6"><br>
+			緑：<input type="text" id="green" value="255" size="6"><br>
+			青：<input type="text" id="blue" value="255" size="6"><br>
+			<input type="button" id="calc" value="ピクセル数を計算"><br>
+			<input type="button" id="histgram" value="ヒストグラムを表示">

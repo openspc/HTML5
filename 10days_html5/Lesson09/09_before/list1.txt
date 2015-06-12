@@ -1,0 +1,6 @@
+		<form>
+			URL：<input type="text" id="url" size="50"
+					value="http://www.openspc2.org/HTML5/audio/data/sample1.mp3">
+			<br>
+			<input type="button" value="オーディオデータ読み込み" id="loadButton">
+		</form>

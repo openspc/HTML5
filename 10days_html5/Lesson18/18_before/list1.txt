@@ -1,0 +1,2 @@
+			<input type="button" id="save" value="現在地の位置情報を保存"><br>
+			<input type="button" id="restore" value="保存した位置情報を読み出し">

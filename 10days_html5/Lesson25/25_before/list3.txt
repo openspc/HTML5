@@ -1,0 +1,7 @@
+		<form>
+			<input type="button" value="半分のサイズで画像を描画" id="draw1">
+			<input type="button" value="画像の一部を描画" id="draw2">
+			<input type="button" value="クリッピング領域内に描画" id="draw3">
+			<input type="button" value="映像を描画" id="draw4">
+			<input type="button" value="Canvasを描画" id="draw5">
+		</form>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>入力フォームとJavaScript</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/form.js"></script>
+	</head>
+	<body>
+		<h1>入力フォームとJavaScript</h1>
+		<form id="resForm">
+			<fieldset>
+				<legend>予約情報</legend>
+				ID：<input type="number" id="userID" name="userID"
+					placeholder="ユーザー番号を入れてください" required autofocus><br>
+			</fieldset>
+			<fieldset>
+				<legend>予約情報</legend>
+				予約日時：<input type="datetime-local" id="resTime" name="resTime" size="30" step="3600" required><br>
+				<input type="button" value="カウントアップ" id="countUp">
+				<input type="button" value="カウントダウン" id="countDown"><br>
+				予約人数：<input type="number" id="resNumber" name="resNumber" value="1" min="1" max="20" required>(1-20人)<br>
+				<input type="button" value="予約人数に1を加算" id="plus1"><br>
+			</fieldset>
+			<fieldset>
+				<legend>部屋のカラー指定</legend>
+				赤：<input type="range" id="red" name="red" min="0" max="255" step="1"><br>
+				緑：<input type="range" id="green" name="green" min="0" max="255" step="20"><br>
+				青：<input type="range" id="blue" name="blue" min="0" max="255" step="50"><br>
+				<div id="bgcolor"></div>
+			</fieldset>
+			予約状況：<progress id="resStatus" min="0" max="100" value="0">0%が予約済み</progress><br>
+			<input type="button" id="resCheck" value="予約チェック"><br>
+			<input type="button" id="validOff" value="標準のバリデートをオフにする"><br>
+			<input type="submit" value="送信">
+		</form>
+		<div id="status">---</div>
+	</body>
+</html>

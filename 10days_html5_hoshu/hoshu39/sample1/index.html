@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+	<head>
+		<meta charset="utf-8">
+		<title>Media Captureを使ったカメラからの取り込み</title>
+	</head>
+	<body>
+		<h1>Media Captureを使ったカメラからの取り込み</h1>
+		<form>
+			<input type="file" accept="image/*;capture=camera" id="cameraImage">
+		</form>
+		<canvas id="myCanvas" width="240" height="320" style="border:1px solid black"></canvas>
+		<script>
+			// カメラからのキャプチャーが終わったら処理を行う
+			document.getElementById("cameraImage").addEventListener("change", function(){
+				// Canvasに画像を描画
+				var canvasObj = document.getElementById("myCanvas");
+				var context = canvasObj.getContext("2d");
+				var canvasW = canvasObj.width;
+				var canvasH = canvasObj.height;
+				// ここでAndorid 4(実際にはver 3.1でもOK)で対応したFile APIを使用
+				var reader = new FileReader();
+				reader.onload = function(evt){	// カメラからのデータを受け取ったら画像オブジェクトを生成
+					var imgObj = new Image();
+					imgObj.src = reader.result;	// カメラの撮影画像はdataURL形式なのでsrcプロパティに入れるだけ
+					imgObj.onload = function(){
+						context.drawImage(imgObj,0,0, canvasObj.width, canvasObj.height);	// Canvasに描画
+					}
+				}
+				var imageFile = document.getElementById("cameraImage").files[0];	// カメラ画像のFileオブジェクト
+				reader.readAsDataURL(imageFile);	// readAsDataURLで読み込ませる
+			}, false);
+		</script>
+	</body>
+</html>

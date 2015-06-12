@@ -1,0 +1,87 @@
+■補講　Media Captureでカメラ画像を取り込む
+　これまでHTML+JavaScriptはカメラやマイクなどデバイスにアクセスすることができませんでした。現在、これらのデバイスに対してアクセスし利用するAPIが策定されています。それがMedia Captureです。
+
+●W3C HTML Media Capture
+http://www.w3.org/TR/html-media-capture/
+
+●Capture API
+http://www.w3.org/TR/media-capture-api/
+
+Media Captureを利用するには主に2つの方法があります。1つはこれから説明するinput要素を使った方法です。もう1つがPhoneGapなどに見られるJavaScriptを使ってカメラデバイスにアクセスして処理する方法です。
+
+Android 4を搭載したGalaxy NexusはHTMLから手軽にMedia Captureを利用することができるようになっています（実際にはAndroid 3、つまりタブレットからできるようになっています）。
+このMedia Captureを利用すればカメラかで撮影した画像を取り込んでCanvasに描画し、加工することもできます。これまではPhoneGapやTitaniumなどのモバイルフレームワークを使わないと駄目だった事がHTML+JavaScriptだけでできてしまうわけです。
+
+Media Captureでは取り込むデバイスとして
+
+・スチルカメラ（静止画）	camera
+・ビデオカメラ	camcorder
+・マイク	microphone
+
+が定義されています（デフォルトではfilesystem、つまり一般的なファイル選択です）。
+実際に使用するには以下のようにHTMLを書きます。
+
+<input type="file" accept="image/*;capture=camera">
+
+accept属性でデバイスを指定することで、通常はファイル選択ダイアログが表示されますが、自動的にカメラが起動するようになります。
+ちなみにMedia Capture／Capture APIでは起動した後のカメラを制御することはできません。これはカメラに限らずビデオカメラでもマイクでも同様です。
+カメラで撮影すると撮影した画像データが内部に保存されます。この保存されたファイルをFile APIを使って読み出すことができます。
+実際にカメラで撮影した画像をCanvasに描画するプログラムが以下のものになります。File APIに関しては本書の第6章（特にレッスン23）を参照してください。
+
+なお、ビデオカメラから取り込みたい場合はinput要素のacceptでcapture=cameraとなっているcameraをcamcorderにします。同様にマイクから取り込みたい場合はmicrophoneを指定します。
+
+
+
+------------------------------------------------------------------------------------------------
+■HTML (index.html)
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+	<head>
+		<meta charset="utf-8">
+		<title>Media Captureを使ったカメラからの取り込み</title>
+	</head>
+	<body>
+		<h1>Media Captureを使ったカメラからの取り込み</h1>
+		<form>
+			<input type="file" accept="image/*;capture=camera" id="cameraImage">
+		</form>
+		<canvas id="myCanvas" width="240" height="320" style="border:1px solid black"></canvas>
+		<script>
+			// カメラからのキャプチャーが終わったら処理を行う
+			document.getElementById("cameraImage").addEventListener("change", function(){
+				// Canvasに画像を描画
+				var canvasObj = document.getElementById("myCanvas");
+				var context = canvasObj.getContext("2d");
+				var canvasW = canvasObj.width;
+				var canvasH = canvasObj.height;
+				// ここでAndorid 4(実際にはver 3.1でもOK)で対応したFile APIを使用
+				var reader = new FileReader();
+				reader.onload = function(evt){	// カメラからのデータを受け取ったら画像オブジェクトを生成
+					var imgObj = new Image();
+					imgObj.src = reader.result;	// カメラの撮影画像はdataURL形式なのでsrcプロパティに入れるだけ
+					imgObj.onload = function(){
+						context.drawImage(imgObj,0,0, canvasObj.width, canvasObj.height);	// Canvasに描画
+					}
+				}
+				var imageFile = document.getElementById("cameraImage").files[0];	// カメラ画像のFileオブジェクト
+				reader.readAsDataURL(imageFile);	// readAsDataURLで読み込ませる
+			}, false);
+		</script>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+
+【図】fig1.png
+サンプルの実行画面。ここで「ファイルを選択」ボタンをタップ
+
+【図】fig2.png
+するとカメラが起動。シャッターボタンを押すと撮影される
+
+【図】fig3.png
+チェックマークをタップすると撮影が完了し、撮影データが内部に保存される
+
+【図】fig4.png
+カメラ画像をJavaScriptで読み込みCanvasに描画した
+
+
+

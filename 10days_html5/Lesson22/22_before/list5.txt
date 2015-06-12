@@ -1,0 +1,2 @@
+		<div id="fileinfo"></div>
+		<div id="contents"></div>

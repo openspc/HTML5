@@ -1,0 +1,9 @@
+h1 {
+	margin: 0;
+	font-size:14pt;
+	border-bottom:1px solid gray;
+}
+#status {
+	font-size:11pt;
+	line-height:110%;
+}

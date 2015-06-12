@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>背景画像付きシューティングゲーム</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/shoot.js"></script>
+	</head>
+	<body>
+		<canvas width="320" height="480">Canvasが使えるブラウザでどうぞ</canvas>
+		<div>マウスを動かすと戦闘機（自機）操作できます
+			<ul>
+				<li><img src="images/fighter.png" id="figter">操作する戦闘機（自機）
+				<li><img src="images/ika.png" id="ika">敵。これを倒す
+				<li><img src="images/beam.png" id="beam">戦闘機のレーザー。三連射が可能
+				<li><img src="images/tama.png" id="tama">敵（イカ）の弾。当たるとやられる
+			</ul>
+		</div>
+		<audio src="sound/bgm.mp3" loop></audio>
+	</body>
+</html>

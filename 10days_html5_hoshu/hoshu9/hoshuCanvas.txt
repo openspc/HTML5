@@ -1,0 +1,111 @@
+■補講　Canvasでパーティクル
+　第7章ではCanvasを使った漢字練習のサンプルを作成しました。本書で解説した地味なものではなく、もっと見た目に面白いものがいいなあという人もいるかもしれません。
+　そこで、この補習ではCanvasを利用してパーティクルを扱ってみましょう。
+
+------------------------------------------------------------------------------------------------
+■パーティクルとは？
+　パーティクルとは粒子のことです。パーティクルはポリゴンなどでは表現しにくいものに向いています。例えば炎です。炎をポリゴンで表現すると面倒な割にうまく再現されません。これをパーティクルを使って表現することで、かなりリアルな炎を描画することができます。
+
+●パーティクル・システム
+http://ja.wikipedia.org/wiki/パーティクル・システム
+
+
+------------------------------------------------------------------------------------------------
+■Canvasで粒子を描画
+　Canvasにパーティクル／粒子を描画するのはarc()メソッドかfillRect()などのメソッドを使います。とは言え、パーティクルは点だけを描画するものではありません。drawImage()を使って点のかわりに画像を描画することもできます。パーティクルは座標点でしか処理しないので、それを利用して何を描画するかは自由です。
+　以下のサンプルは上から粒子（白い点）が落下するものです。パーティクルの座標値などの情報は配列に入れておきタイマーを使って座標値を変化させ、その都度Canvasに点を描画していきます。
+
+
+------------------------------------------------------------------------------------------------
+■パーティクル
+------------------------------------------------------------------------------------------------
+// パーティクルの粒子を配列に用意
+var p = new Array();
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	// パーティクルの粒子の座標と落下速度を設定
+	for(var i=0; i<1000; i++){
+		var x = Math.random() * canvasObj.width;
+		var y = Math.random() * canvasObj.height / 10;
+		var n = Math.random() * 6 + 1;	// 落下速度
+		p[i] = { x : x, y : y, speed : n };	// データを入れる
+	}
+	setInterval(function(){
+		var canvasObj = document.getElementsByTagName("canvas")[0];
+		var context = canvasObj.getContext("2d");
+		context.fillStyle = "black";
+		context.fillRect(0, 0, canvasObj.width, canvasObj.height);
+		context.fillStyle = "white";
+		for(var i=0; i<p.length; i++){	// パーティクルの数だけ繰り返す
+			p[i].y = p[i].y + p[i].speed;
+			if (p[i].y > canvasObj.height){
+				p[i].y = canvasObj.height - 1;
+			}
+			context.fillRect(p[i].x, p[i].y, 1, 1);
+		}
+	}, 50);
+}, true);
+------------------------------------------------------------------------------------------------
+
+
+
+------------------------------------------------------------------------------------------------
+■雪を降り積もらせる
+　それではパーティクルを利用して雪が降り積もるようにしてみましょう。どうやって雪を積もらせるかですが、あらかじめ配列に降り積もった雪の量を入れておきます。最初は何も積もっていないので0になります。雪（粒子）が下まできたら、X座標をキーにして積もった高さを1つ増やします。
+　これをタイマーで繰り返すだけで雪が降り積もるようになります。
+　実際のプログラムは以下のようになります。他にも雪を積もらせる方法はありますので、いろいろ考えてみると勉強になるでしょう
+
+
+------------------------------------------------------------------------------------------------
+■雪を積もらせる
+------------------------------------------------------------------------------------------------
+// パーティクルの粒子（雪）を配列に用意
+var p = new Array();
+var snowHeight = new Array();	// 降り積もった雪の高さ
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	var context = canvasObj.getContext("2d");
+	context.fillStyle = "black";
+	context.fillRect(0,0, canvasObj.width, canvasObj.height);
+	for(var i=0; i<canvasObj.width; i++){
+		snowHeight[i] = 0;	// 積もった高さを0にする
+	}
+		
+	setInterval(function(){
+		var canvasObj = document.getElementsByTagName("canvas")[0];
+		var context = canvasObj.getContext("2d");
+		for(var i=0; i<p.length; i++){	// パーティクルの数だけ繰り返す
+			if (p[i] ==null) { continue; }	// パーティクルがなかったら繰り返しの先頭へ
+			context.fillStyle = "black";
+			context.fillRect(p[i].x, p[i].y-1, 1, 2);	// 雪を消す
+			p[i].y = p[i].y + p[i].speed;
+			context.fillStyle = "white";
+			if (p[i].y > (canvasObj.height-snowHeight[p[i].x])){
+				snowHeight[p[i].x]++;	// 積もった量を1つ増やす
+				if (snowHeight[p[i].x] < 0) { snowHeight[p[i].x] = 0; }	// 上まで来たらそれ以上にならないようにする
+				context.fillRect(p[i].x, canvasObj.height-snowHeight[p[i].x], 1, snowHeight[p[i].x]);
+				p[i] = null;	// 雪の存在を消す
+			}else{
+				context.fillRect(p[i].x, p[i].y, 1, 1);
+			}
+		}
+		// パーティクルの粒子の座標と落下速度を設定
+		var x = Math.floor(Math.random() * canvasObj.width);
+		var y = Math.floor(Math.random() * -10);
+		var n = Math.random() * 1;	// 落下速度
+		p[i] = { x : x, y : y, speed : n };	// データを入れる
+	}, 25);
+}, true);
+------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+

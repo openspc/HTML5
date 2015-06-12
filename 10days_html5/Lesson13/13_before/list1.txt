@@ -1,0 +1,3 @@
+			タイトル：<input type="text" name="memoTitle" id="memoTitle" placeholder="タイトルを入れてください"><br>
+			日　　付：<input type="text" name="memoDate" id="memoDate"><br>
+			<textarea rows="5" cols="30" name="memoContents" id="memoContents" placeholder="内容を入れてください"></textarea>

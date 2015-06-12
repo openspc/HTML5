@@ -1,0 +1,16 @@
+canvas {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	background-image: url(BGstar.png);
+	-webkit-animation: 'moveBG' 60s linear 0s infinite normal;
+}
+@-webkit-keyframes 'moveBG' {
+	0% { background-position:0px 0px; }
+	100% { background-position:0px 960px; }
+}
+div {
+	position: absolute;
+	left: 10px;
+	top: 490px;
+}

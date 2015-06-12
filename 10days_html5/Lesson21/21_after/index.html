@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>選択したテキストファイルの内容を表示</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/file.js"></script>
+	</head>
+	<body>
+		<h1>選択したテキストファイルの内容を表示</h1>
+		<form>
+			<input type="file" id="filedata" accept="text/*">
+			<input type="button" id="read" value="選択したファイル内容を表示">
+			<input type="button" id="stopButton" value="読み込みを中断">
+		</form>
+		<progress id="loadstatus" max="100" value="0">Loading...</progress>
+		<div id="fileinfo"></div>
+		<div id="contents"></div>
+	</body>
+</html>

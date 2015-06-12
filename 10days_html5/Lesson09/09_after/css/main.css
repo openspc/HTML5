@@ -1,0 +1,8 @@
+#controller {
+	opacity: 0.3;
+}
+#status {
+	font-size: 11pt;
+	font-weight: bold;
+	line-height: 170%;
+}

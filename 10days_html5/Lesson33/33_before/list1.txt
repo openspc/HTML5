@@ -1,0 +1,3 @@
+			文章：<textarea rows="5" cols="30" id="sourcetext"
+			>今日は快晴で、雲がひとつもないのです。明日もよい天気になりそうです。
+			</textarea><br>

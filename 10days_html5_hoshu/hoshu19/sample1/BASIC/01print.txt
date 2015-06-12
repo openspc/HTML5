@@ -1,0 +1,2 @@
+10 REM ここは注釈です
+20 PRINT "Sample"

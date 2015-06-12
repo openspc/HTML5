@@ -1,0 +1,68 @@
+■補講　画像とバイナリファイル
+　本書の6章のレッスン23では画像ファイルを読み込むのにreadAsDataURL()メソッドを使いました。これだと本書でも説明しているとおりdataURL形式として読み込まれるので簡単に画像を表示することができます。
+　ただ、画像データでなく実際にバイナリファイルを解析して表示したい場合もあります。本書では画像データをバイナリファイルで読み込んでも表示する手段がないと説明しました(206ページ)。これは、正しいとも言えますし正しくないとも言えます。
+　というのも自前で解析ができる画像形式であればCanvasに対して描画することで表示が可能だからです。
+
+
+------------------------------------------------------------------------------------------------
+■RAWデータをCanvasに描画
+　ここでは画像のバイナリデータを読み込みCanvasに描画します。画像フォーマットは非常に多くのものがありますが、ここではもっともシンプルな（解析しなくても済む）RAWデータの画像形式を使います。
+　RAWデータは画像の1ピクセルの輝度を1バイトに対応させたものです。RAWデータには1ピクセル単位（RGB）で保存されているタイプとRGB各プレーン（輝度）ごとに保存されているものがあります。ここでは1ピクセル単位で保存されている形式にしました。1ピクセルでRGBが1バイトずつですから1ピクセルに必要なのは3バイトということになります。
+　RAWデータには画像の情報を入れたヘッダー部分がありません。このため、描画する画像の横幅と縦幅は知っている必要があります。ここで使用するsunflower.rawは横128×縦128ピクセルの画像です。
+　単純にRGBRGBRGB...と並んでいるだけですので3バイト読み出して、それぞれの輝度をfillStyleプロパティに設定します。その後、1ピクセルの塗り潰された四角形を描画します。これで画像の1ピクセルが表示されたことになります。あとは、画像の横幅×縦幅の分だけ繰り返し描画していけばできあがりです。
+
+　実際のプログラムは以下のようになります。Google ChromeやFirefoxなどではサーバーにプログラムをアップロードしてから実行してください。ローカル上では動作しません。あと、File APIのバイナリ読み込みに対応していないSafari 5.1では動作しません。
+
+
+------------------------------------------------------------------------------------------------
+■バイナリファイル（画像）を解析（本当はしてないけど）してCanvasに描画
+------------------------------------------------------------------------------------------------
+window.addEventListener("load", function(){
+	var canvasObj = document.getElementsByTagName("canvas")[0];
+	var context = canvasObj.getContext("2d");
+	if (!context){ return; }
+	// ボタンがクリックされた時の処理
+	document.getElementById("exec").addEventListener("click", function(){
+		var binaryFile = document.getElementById("filedata").files[0];
+		reader = new FileReader();
+		reader.onload = function(evt){
+			var data = evt.target.result;	// バイナリデータ読み出し
+			var ptr = 0;
+			for(var y=0; y<128; y++){
+				for(var x=0; x<128; x++){
+					var val = data.charCodeAt(ptr++);
+					var R = val.toString(16); if(val<16){ R = "0"+R; }
+					val = data.charCodeAt(ptr++);
+					var G = val.toString(16); if(val<16){ G = "0"+G; }
+					val = data.charCodeAt(ptr++);
+					var B = val.toString(16); if(val<16){ B = "0"+B; }
+					context.fillStyle = "#"+R+G+B;
+					context.fillRect(x,y,1,1);
+				}
+			}
+		}
+		reader.readAsBinaryString(binaryFile);
+	}, true);
+}, true);
+------------------------------------------------------------------------------------------------
+■HTML部分
+------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>RAWデータを描画</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/bin.js"></script>
+	</head>
+	<body>
+		<h1>RAWデータを描画</h1>
+		<form>
+			<input type="file" id="filedata"><br>
+			<input type="button" id="exec" value="描画">
+		</form>
+		<canvas width="640" height="480">Canvasが使えるブラウザでどうぞ</canvas>
+	</body>
+</html>
+------------------------------------------------------------------------------------------------
+

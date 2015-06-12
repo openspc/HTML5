@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>メモ帳</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/storage.js"></script>
+	</head>
+	<body>
+		<h1>メモ帳</h1>
+		<form>
+			タイトル：<input type="text" name="memoTitle" id="memoTitle" placeholder="タイトルを入れてください"><br>
+			日　　付：<input type="text" name="memoDate" id="memoDate"><br>
+			<textarea rows="5" cols="30" name="memoContents" id="memoContents" placeholder="内容を入れてください"></textarea>
+			<br>
+			<input type="button" id="saveButton" value="保存する">
+			<input type="button" id="loadButton" value="保存したメモを読み出す">
+		</form>
+		<div id="status"></div>
+	</body>
+</html>

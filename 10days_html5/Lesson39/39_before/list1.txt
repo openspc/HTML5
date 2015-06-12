@@ -1,0 +1,4 @@
+		<div>
+			ハイスコア：<span id="high">100</span>点
+			　スコア：<span id="score">0</span>点
+		</div>

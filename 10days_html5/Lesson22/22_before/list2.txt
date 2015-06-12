@@ -1,0 +1,1 @@
+			表示するバイト数：<input type="text" id="readcount" value="16"><br>

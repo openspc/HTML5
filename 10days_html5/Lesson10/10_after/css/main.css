@@ -1,0 +1,30 @@
+#controller {
+	opacity: 0.3;
+}
+#status {
+	font-size: 11pt;
+	font-weight: bold;
+	line-height: 170%;
+}
+ul {
+	margin: 0;
+	padding: 0;
+}
+li {
+	width: 200px;
+	list-style: none;
+	background-repeat: no-repeat;
+	background-image: url(../images/book.png);
+	padding-left: 24px;
+	line-height: 30px;
+}
+li:hover {
+	background-color: #fff0df;
+}
+#time {
+	border:1px solid black;
+	width: 220px;
+	height: 24px;
+	background-color: #eee;
+	font-size: 10pt;
+}

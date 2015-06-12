@@ -1,0 +1,3 @@
+		<div id="dropArea">
+			ドロップ領域/
+		</div>

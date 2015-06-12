@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>映像を再生</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/video.js"></script>
+	</head>
+	<body>
+		<video id="myVideo" src="dummy.ogg">
+			<p>HTML5 Videoに対応したブラウザをご利用ください</p>
+		</video>
+		<div id="controller">
+			<img src="images/play.png" id="playButton" alt="再生">
+			<img src="images/stop.png" id="stopButton" alt="停止">
+			<img src="images/rewind.png" id="rewindButton" alt="巻き戻し">
+			<form>
+				速度：<input type="range" value="1.0" min="0.1" max="2.0" step="0.1" id="speedSlider">
+			</form>
+		</div>
+		<div id="playList">
+			<img src="images/waterfall1.jpg" data-video-url="movie/sample1" alt="滝1">
+			<img src="images/waterfall2.jpg" data-video-url="movie/sample2" alt="滝2">
+		</div>
+		<div id="status"></div>
+	</body>
+</html>

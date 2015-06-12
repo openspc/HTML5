@@ -1,0 +1,11 @@
+#dropArea img, #dropArea video, #dropArea audio, #dropArea div {
+	border: 1px solid black;
+	width: 120px;
+	height: 120px;
+	background-color: black;
+	color: white;
+	font-size: 9pt;
+	line-height:11pt;
+	overflow: scroll;
+	float: left;
+}

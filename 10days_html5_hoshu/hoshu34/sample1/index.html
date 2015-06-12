@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>階段があるゲーム（迷路）</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/map.js"></script>
+		<script src="js/maze.js"></script>
+	</head>
+	<body>
+		<canvas width="480" height="320">Canvasが使えるブラウザでどうぞ</canvas>
+		<img src="images/myChar.png" id="myChar">
+		<div>カーソルキー（←→↑↓）を動かすと操作できます
+			<ul>
+				<li><img src="images/myChar.png">操作するキャラ
+				<li><img src="images/block.png" id="block">ブロック。ここは通り抜けることができない
+				<li><img src="images/none.png" id="none">通路
+				<li><img src="images/hashigo.png" id="hashigo">はしご
+				<li><img src="images/door.png" id="door">ドア（脱出口。ここに行くとクリア）
+				<li><img src="images/ice.png" id="ice">つらら（ただの飾り）
+				<li><img src="images/block2.png" id="block2">ブロックその2（ただの飾り。通り抜けられる）
+			</ul>
+		</div>
+	</body>
+</html>

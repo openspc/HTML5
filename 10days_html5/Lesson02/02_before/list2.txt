@@ -1,0 +1,31 @@
+			<h2>オーダーフォーム</h2>
+			<form method="post" action="order.cgi">
+				<p>
+					<label>商品名：
+						<input type="text" name="orderitem" list="itemname" autofocus>
+					</label>
+				</p>
+				<datalist id="itemname">
+					<option value="toHTML5.app">toHTML5.app</option>
+					<option value="ikaruga">斑鳩プラグイン</option>
+					<option value="autoHTML5">HTML5自動マークアップ</option>
+					<option value="fromHTML4">HTML4to5コンバーター</option>
+				</datalist>
+				<p>
+					<label>注文数：
+						<input type="number" min="1" max="10" value="1" name="ordernumber">
+					</label>
+				</p>
+				<p>
+					<label>納品日：
+						<input type="date" name="delivery"><br>
+					</label>
+				</p>
+				<p>
+					<label>メール：
+						<input type="email" name="email" size="36" placeholder="メールアドレスを入れてください" required>
+					</label>
+				</p>
+				<p><input type="submit" value="送信"></p>
+			</form>
+		</section>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>映像を再生</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/video.js"></script>
+	</head>
+	<body>
+		<video id="myVideo" controls preload poster="images/thumb.jpg">
+			<source src="movie/sample.mov">
+			<source src="movie/sample.mp4">
+			<source src="movie/sample.webm">
+			<source src="movie/sample.ogv">
+			<p>HTML5 Videoに対応したブラウザをご利用ください</p>
+		</video>
+		<div id="controller">
+			<img src="images/play.png" id="playButton" alt="再生">
+			<img src="images/stop.png" id="stopButton" alt="停止">
+			<img src="images/rewind.png" id="rewindButton" alt="巻き戻し">
+		</div>
+	</body>
+</html>

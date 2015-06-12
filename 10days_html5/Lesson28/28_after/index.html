@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>漢字の練習</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/canvas.js"></script>
+	</head>
+	<body>
+		<h1>漢字の練習</h1>
+		<form>
+		文字：<input type="text" size="4" id="char" value="翔">
+		<input type="button" id="drawText" value="文字を描画">
+		<input type="button" id="undo" value="取り消し">
+		<input type="button" id="save" value="保存">
+		<input type="button" id="load" value="保存したデータを読み込み">
+		</form>
+		<canvas id="myCanvas" width="640" height="360">
+			Canvasが利用できるブラウザを使用してください。
+		</canvas>
+		<div id="status"></div>
+	</body>
+</html>

@@ -1,0 +1,3 @@
+		<img src="images/fighter.png" id="fighter" width="14" height="16">
+		<img src="images/bg.png" id="dataBG" width="2" height="2">
+		<img src="images/bgMap.png" id="dataMap" width="2" height="2">

@@ -1,0 +1,1 @@
+		<progress id="loadstatus" max="100" value="0">Loading...</progress>

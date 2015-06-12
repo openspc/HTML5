@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>横スクロールシューティングゲーム</title>
+		<link rel="stylesheet" href="css/main.css" type="text/css" media="all">
+		<script src="js/side.js"></script>
+	</head>
+	<body>
+		<canvas width="480" height="320" id="main"></canvas>
+		<canvas width="480" height="320" id="ground"></canvas>
+		<div>マウスを動かすと戦闘機（自機）操作できます。<br>マップカウンタ：<span id="stat"></span>
+			<ul>
+				<li><img src="images/fighter.png" id="figter">操作する戦闘機（自機）
+				<li><img src="images/ika.png" id="ika">敵。これを倒す
+				<li><img src="images/ika2.png" id="ika2">敵。これを倒すとパワーアップアイテムが出る
+				<li><img src="images/beam.png" id="beam">戦闘機のレーザー。三連射が可能
+				<li><img src="images/tama.png" id="tama">敵（イカ）の弾。当たるとやられる
+				<li><img src="images/power.png" id="pow">パワーアップアイテム。撃てるビームの数が増える
+			</ul>
+		</div>
+	</body>
+</html>

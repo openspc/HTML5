@@ -1,0 +1,2 @@
+			<input type="button" id="saveButton" value="保存する">
+			<input type="button" id="loadButton" value="保存したメモを読み出す">

@@ -1,0 +1,2 @@
+			<input type="button" id="read" value="選択したファイル内容を表示">
+			<input type="button" id="stopButton" value="読み込みを中断">
